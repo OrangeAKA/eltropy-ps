@@ -174,7 +174,13 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
       const intent = state.context.intent?.intent;
       let systemText = "Workflow complete.";
       if (intent === "lending_inquiry" || intent === "refinance_inquiry") {
-        systemText = "✓ E-sign link sent. Check your messages to review and sign the offer.";
+        const o = state.context.loanOffer;
+        if (o && !o.approved) {
+          systemText =
+            "We weren't able to approve this today. A member services officer will reach out within one business day to walk through alternatives and next steps.";
+        } else {
+          systemText = "✓ E-sign link sent. Check your messages to review and sign the offer.";
+        }
       } else if (intent === "card_dispute") {
         const d = state.context.disputeDetails;
         systemText = d?.provisionalCreditEligible

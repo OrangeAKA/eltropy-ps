@@ -243,9 +243,27 @@ export async function runWorkflow(
       );
     }
 
-    // After loan decisioning, check whether THIS step is the human-review step
-    // before e-sign dispatch. One-Call Lending runs loan-decisioning twice
-    // (auto then human-review); only the humanInTheLoop step should pause.
+    // After the human-review loan-decisioning step, branch on the decision:
+    // declined → halt the workflow cleanly (skip e-sign), approved → pause
+    // for officer confirm before dispatch.
+    if (
+      step.skillId === "skill-loan-decisioning" &&
+      step.humanInTheLoop &&
+      context.loanOffer &&
+      !context.loanOffer.approved
+    ) {
+      callbacks.onLog(
+        makeLog(
+          startedAt,
+          "WARN",
+          "workflow.halt",
+          `workflow.halt(reason=offer_declined) — ${context.loanOffer.rationale}`,
+        ),
+      );
+      callbacks.onComplete();
+      return context;
+    }
+
     if (
       step.skillId === "skill-loan-decisioning" &&
       step.humanInTheLoop &&

@@ -14,6 +14,10 @@ export default function Home() {
   const [triggerOpen, setTriggerOpen] = useState(false);
 
   const isActive = state.phase !== "idle";
+  // Pristine = no trigger has ever been sent in this session. The halo on the
+  // Send trigger button is meant to onboard first-time viewers; once they
+  // have engaged the demo even once, the halo retires.
+  const pristine = state.auditLog.length === 0 && !state.startedAt;
 
   return (
     <>
@@ -22,6 +26,7 @@ export default function Home() {
           onTriggerClick={() => setTriggerOpen(true)}
           onReset={reset}
           isActive={isActive}
+          pristine={pristine}
         />
 
         <main className="flex-1 grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] min-h-0">

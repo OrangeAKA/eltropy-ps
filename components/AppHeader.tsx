@@ -7,6 +7,7 @@ type Props = {
   onTriggerClick: () => void;
   onReset: () => void;
   isActive: boolean;
+  pristine?: boolean;
 };
 
 const SYSTEMS = [
@@ -16,7 +17,7 @@ const SYSTEMS = [
   { name: "Eltropy Voice", status: "connected" as const },
 ];
 
-export function AppHeader({ onTriggerClick, onReset, isActive }: Props) {
+export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props) {
   return (
     <header className="border-b border-neutral-200 bg-white px-4 py-2.5 flex items-center gap-4 shrink-0">
       <div className="flex items-center gap-2.5 shrink-0">
@@ -65,14 +66,33 @@ export function AppHeader({ onTriggerClick, onReset, isActive }: Props) {
           <RotateCcw className="h-3.5 w-3.5" />
           Reset
         </Button>
-        <Button
-          onClick={onTriggerClick}
-          size="sm"
-          className="gap-1.5 h-8 bg-blue-600 hover:bg-blue-700 shadow-sm"
-        >
-          <Play className="h-3.5 w-3.5" />
-          Send trigger
-        </Button>
+        {pristine && (
+          <span className="hidden xl:inline text-[11px] text-blue-700 font-medium animate-pulse">
+            Start here &rarr;
+          </span>
+        )}
+        <div className="relative">
+          {pristine && (
+            <>
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -inset-1 rounded-lg ring-2 ring-blue-400 opacity-60 animate-ping"
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -inset-0.5 rounded-md ring-2 ring-blue-400/70"
+              />
+            </>
+          )}
+          <Button
+            onClick={onTriggerClick}
+            size="sm"
+            className="relative gap-1.5 h-8 bg-blue-600 hover:bg-blue-700 shadow-sm"
+          >
+            <Play className="h-3.5 w-3.5" />
+            Send trigger
+          </Button>
+        </div>
       </div>
     </header>
   );

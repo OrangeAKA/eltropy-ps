@@ -142,8 +142,15 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
 
             {/* Completion summary */}
             <AnimatePresence>
-              {state.phase === "completed" && offer && (
+              {state.phase === "completed" && offer && offer.approved && (
                 <CompletionCard
+                  offer={offer}
+                  totalLogs={state.auditLog.length}
+                  elapsedMs={state.auditLog[state.auditLog.length - 1]?.elapsedMs ?? 0}
+                />
+              )}
+              {state.phase === "completed" && offer && !offer.approved && (
+                <DeclinedCard
                   offer={offer}
                   totalLogs={state.auditLog.length}
                   elapsedMs={state.auditLog[state.auditLog.length - 1]?.elapsedMs ?? 0}
@@ -508,6 +515,55 @@ function CompletionCard({
               Total time
             </div>
             <div className="font-mono text-emerald-900">
+              {(elapsedMs / 1000).toFixed(1)}s
+            </div>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+function DeclinedCard({
+  offer,
+  totalLogs,
+  elapsedMs,
+}: {
+  offer: LoanOffer;
+  totalLogs: number;
+  elapsedMs: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: "spring", stiffness: 320, damping: 22 }}
+    >
+      <Card className="p-3 border-amber-300 bg-amber-50 gap-1">
+        <div className="flex items-center gap-2 mb-1">
+          <AlertTriangle className="h-4 w-4 text-amber-700" />
+          <span className="font-medium text-sm text-amber-900">
+            Not approved, routed to officer follow-up
+          </span>
+        </div>
+        <p className="text-xs text-amber-900 leading-snug">{offer.rationale}</p>
+        <div className="bg-white/60 border border-amber-200 rounded p-2 text-[10px] leading-snug text-amber-900 mt-1">
+          Next step: officer schedules a follow-up call within one business day
+          to walk through credit counseling, secured-card pre-approval, or a
+          smaller principal option.
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-2 text-[10px]">
+          <div>
+            <div className="text-amber-700/80 uppercase tracking-wide">
+              Audit events
+            </div>
+            <div className="font-mono text-amber-900">{totalLogs}</div>
+          </div>
+          <div>
+            <div className="text-amber-700/80 uppercase tracking-wide">
+              Total time
+            </div>
+            <div className="font-mono text-amber-900">
               {(elapsedMs / 1000).toFixed(1)}s
             </div>
           </div>
