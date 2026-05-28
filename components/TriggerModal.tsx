@@ -341,7 +341,7 @@ export function TriggerModal({ open, onOpenChange, onSend }: Props) {
             className="gap-1.5"
           >
             <Send className="h-3.5 w-3.5" />
-            Send to Mission Control
+            Start workflow
           </Button>
         </div>
       </DialogContent>

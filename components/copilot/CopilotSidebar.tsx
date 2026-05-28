@@ -275,7 +275,7 @@ function OfferCard({
             className="flex-1 h-8 gap-1.5"
           >
             <Send className="h-3.5 w-3.5" />
-            Confirm & send
+            Send offer to member
           </Button>
           <Button
             onClick={onModify}
