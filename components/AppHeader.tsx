@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Play, RotateCcw, Zap } from "lucide-react";
+import { Play, RotateCcw } from "lucide-react";
+import { EltropyMark } from "@/components/shared/EltropyMark";
 
 type Props = {
   onTriggerClick: () => void;
@@ -21,8 +22,8 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
   return (
     <header className="border-b border-neutral-200 bg-white px-4 py-2.5 flex items-center gap-4 shrink-0">
       <div className="flex items-center gap-2.5 shrink-0">
-        <div className="h-7 w-7 rounded-md bg-brand-600 flex items-center justify-center shadow-sm">
-          <Zap className="h-4 w-4 text-white" />
+        <div className="h-8 w-8 rounded-md bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center shadow-[0_2px_8px_rgba(14,124,123,0.35)]">
+          <EltropyMark className="h-[18px] w-[18px] text-white" />
         </div>
         <div className="leading-tight">
           <div className="text-[15px] font-semibold tracking-tight">

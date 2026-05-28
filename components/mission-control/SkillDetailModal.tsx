@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Lock, Zap } from "lucide-react";
+import { Lock } from "lucide-react";
+import { EltropyMark } from "@/components/shared/EltropyMark";
 import type { Skill } from "@/data/skills";
 
 type Props = {
@@ -39,7 +40,7 @@ export function SkillDetailModal({ skill, open, onOpenChange }: Props) {
             {isPlaceholder ? (
               <Lock className="h-4 w-4 text-neutral-500" />
             ) : (
-              <Zap className="h-4 w-4 text-brand-600" />
+              <EltropyMark className="h-4 w-4 text-brand-600" />
             )}
             <DialogTitle className="text-lg">{skill.name}</DialogTitle>
           </div>
