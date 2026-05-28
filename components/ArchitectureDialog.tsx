@@ -18,138 +18,97 @@ type Props = {
 export function ArchitectureDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader className="pb-1">
           <DialogTitle className="text-base flex items-center gap-2">
             <EltropyMark className="h-4 w-4 text-brand-600" />
             How this works
           </DialogTitle>
-          <DialogDescription className="text-sm leading-snug">
-            What the LLM is doing, what the rules engine is doing, and where
-            the officer signs off. The split is the point.
+          <DialogDescription className="text-xs leading-snug">
+            What the LLM is doing, what the rules engine is doing, and where the officer signs off.
           </DialogDescription>
         </DialogHeader>
 
         {/* The split: three responsibility lanes */}
-        <section className="mt-2">
-          <div className="text-[10px] uppercase tracking-wide text-neutral-500 font-semibold mb-2">
-            The split
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <LaneCard
-              icon={<EltropyMark className="h-4 w-4 text-brand-600" />}
-              label="LLM"
-              caption="Claude Haiku 4.5"
-              tone="brand"
-              points={[
-                "Free text in, typed JSON out",
-                "Picks one intent from a fixed set",
-                "Extracts amount, merchant, vehicle, etc.",
-                "Self-reports a confidence score",
-              ]}
-              boundary="Doesn't approve, decline, or escalate. Only translates."
-            />
-            <LaneCard
-              icon={<Sliders className="h-4 w-4 text-slate-700" />}
-              label="Rules engine"
-              caption="Deterministic, versioned"
-              tone="slate"
-              points={[
-                "FICO bands, DTI ceiling, LTV ceiling, cross-sell",
-                "Reg E 10-day window, $50 liability cap, $2,500 provisional credit threshold",
-                "GLBA disclosure preconditions",
-                "Per-step guardrails: consent, confidence, scope",
-              ]}
-              boundary="Every decline points at a named rule. Same inputs always produce the same outputs."
-            />
-            <LaneCard
-              icon={<UserCheck className="h-4 w-4 text-amber-700" />}
-              label="Human in loop"
-              caption="Officer signs off"
-              tone="amber"
-              points={[
-                "Reviews the offer before e-sign dispatches",
-                "Confirms the disputed transaction before Velera filing",
-                "Can modify or cancel at any gate",
-                "Identity step-up if confidence drops",
-              ]}
-              boundary="Every outbound action carries an officer signature. The LLM cannot bypass."
-            />
-          </div>
-        </section>
+        <div className="grid grid-cols-3 gap-2">
+          <LaneCard
+            icon={<EltropyMark className="h-3.5 w-3.5 text-brand-600" />}
+            label="LLM"
+            caption="Claude Haiku 4.5"
+            tone="brand"
+            points={[
+              "Free text in, typed JSON out",
+              "Picks one intent + extracts entities",
+              "Self-reports a confidence score",
+            ]}
+            boundary="Doesn't approve, decline, or escalate. Translates only."
+          />
+          <LaneCard
+            icon={<Sliders className="h-3.5 w-3.5 text-slate-700" />}
+            label="Rules engine"
+            caption="Deterministic, versioned"
+            tone="slate"
+            points={[
+              "FICO bands, DTI / LTV ceilings, cross-sell",
+              "Reg E 10-day clock, $50 cap, $2.5K threshold",
+              "GLBA + per-step consent guardrails",
+            ]}
+            boundary="Every decline cites a named rule. Same inputs → same outputs."
+          />
+          <LaneCard
+            icon={<UserCheck className="h-3.5 w-3.5 text-amber-700" />}
+            label="Human in loop"
+            caption="Officer signs off"
+            tone="amber"
+            points={[
+              "Reviews the offer before e-sign dispatches",
+              "Confirms a dispute before Velera filing",
+              "Can modify or cancel at any gate",
+            ]}
+            boundary="Every outbound action carries an officer signature. LLM cannot bypass."
+          />
+        </div>
 
-        {/* Flow trace */}
-        <section className="mt-5">
-          <div className="text-[10px] uppercase tracking-wide text-neutral-500 font-semibold mb-2">
+        {/* Flow trace: single row, 6 cells */}
+        <div className="border border-neutral-200 rounded-md bg-neutral-50/60 p-2.5">
+          <div className="text-[9px] uppercase tracking-wide text-neutral-500 font-semibold mb-1.5">
             One trigger, traced
           </div>
-          <div className="border border-neutral-200 rounded-md bg-neutral-50/60 p-3">
-            <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] gap-2 items-center text-[11px]">
-              <FlowStep
-                kind="input"
-                label="Member message"
-                detail='"I need a $25K auto loan"'
-              />
-              <Arrow />
-              <FlowStep
-                kind="llm"
-                label="LLM classifies"
-                detail="intent + entities + confidence"
-              />
-              <Arrow />
-              <FlowStep
-                kind="rules"
-                label="Router picks workflow"
-                detail="intent → workflow ID"
-              />
-            </div>
-            <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] gap-2 items-center text-[11px] mt-2">
-              <FlowStep
-                kind="rules"
-                label="Guardrails per step"
-                detail="consent, scope, thresholds"
-              />
-              <Arrow />
-              <FlowStep
-                kind="human"
-                label="Officer reviews"
-                detail="confirm / modify"
-              />
-              <Arrow />
-              <FlowStep
-                kind="action"
-                label="Action fires"
-                detail="e-sign / dispute / disclosure"
-              />
-            </div>
-            <div className="mt-3 pt-2 border-t border-neutral-200 text-[10px] text-neutral-600 leading-snug">
-              Every event between these stages lands in the Runtime tab. The
-              audit log is the contract, not a side effect.
-            </div>
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] gap-1 items-stretch">
+            <FlowStep kind="input" label="Member msg" detail='"$25K auto loan"' />
+            <Arrow />
+            <FlowStep kind="llm" label="LLM" detail="intent + entities" />
+            <Arrow />
+            <FlowStep kind="rules" label="Router" detail="→ workflow" />
+            <Arrow />
+            <FlowStep kind="rules" label="Guardrails" detail="per step" />
+            <Arrow />
+            <FlowStep kind="human" label="Officer" detail="confirm / modify" />
+            <Arrow />
+            <FlowStep kind="action" label="Action" detail="e-sign / file" />
           </div>
-        </section>
+          <div className="mt-1.5 text-[10px] text-neutral-600 leading-snug">
+            Every event between stages streams to the Runtime tab. The audit log is the contract.
+          </div>
+        </div>
 
         {/* Two side-by-side notes */}
-        <section className="mt-5 grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <NoteCard
             title="If the LLM goes down"
-            body="A keyword classifier in lib/orchestrator/intent-classifier.ts takes over. The rules engine consumes structured output regardless of who produced it, so the demo and a production deploy both keep running. The LLM is rented; the rules are owned."
+            body="Keyword classifier in lib/orchestrator/intent-classifier.ts takes over. The rules engine consumes structured output regardless of source. LLM is rented; rules are owned."
             accent="brand"
           />
           <NoteCard
             title="Why it stays auditable"
-            body="Every decline cites a specific rule. Every outbound action carries an officer signature. Every event is logged with timing and component. ECOA, Reg E, GLBA, NCUA Part 748: each has a named place in the rules layer, not a vibe in a prompt."
+            body="Every decline cites a specific rule. Every outbound action has an officer signature. Every event is logged. ECOA, Reg E, GLBA, NCUA Part 748 each have a named place in the rules layer, not a vibe in a prompt."
             accent="slate"
           />
-        </section>
+        </div>
 
         {/* Footer pointer */}
-        <div className="mt-4 pt-3 border-t border-neutral-200 text-[10px] text-neutral-500 leading-snug">
-          Source:{" "}
-          <span className="font-mono">lib/orchestrator/</span>,{" "}
-          <span className="font-mono">lib/skills/</span>,{" "}
-          <span className="font-mono">lib/guardrails/</span>. Each file owns
-          exactly one of the three lanes above; the boundaries are the design.
+        <div className="pt-2 border-t border-neutral-200 text-[10px] text-neutral-500 leading-snug">
+          Source: <span className="font-mono">lib/orchestrator/</span>, <span className="font-mono">lib/skills/</span>, <span className="font-mono">lib/guardrails/</span>. Each file owns exactly one lane. The boundaries are the design.
         </div>
       </DialogContent>
     </Dialog>
@@ -178,28 +137,30 @@ function LaneCard({
         ? "border-slate-200 bg-slate-50/60"
         : "border-amber-200 bg-amber-50/40";
   return (
-    <div className={`rounded-md border p-3 ${toneClass}`}>
-      <div className="flex items-center gap-1.5 mb-1">
+    <div className={`rounded-md border p-2.5 ${toneClass}`}>
+      <div className="flex items-center gap-1.5 mb-1.5">
         {icon}
-        <div>
-          <div className="text-xs font-semibold leading-tight">{label}</div>
-          <div className="text-[10px] text-neutral-500 leading-tight">
+        <div className="min-w-0">
+          <div className="text-xs font-semibold leading-tight truncate">
+            {label}
+          </div>
+          <div className="text-[10px] text-neutral-500 leading-tight truncate">
             {caption}
           </div>
         </div>
       </div>
-      <ul className="space-y-1 mt-2">
+      <ul className="space-y-0.5">
         {points.map((p, i) => (
           <li
             key={i}
-            className="text-[11px] text-neutral-700 leading-snug flex gap-1.5"
+            className="text-[11px] text-neutral-700 leading-snug flex gap-1"
           >
             <span className="text-neutral-400 shrink-0">·</span>
             <span>{p}</span>
           </li>
         ))}
       </ul>
-      <div className="text-[10px] text-neutral-500 italic leading-snug mt-2 pt-2 border-t border-neutral-200/70">
+      <div className="text-[10px] text-neutral-500 italic leading-snug mt-1.5 pt-1.5 border-t border-neutral-200/70">
         {boundary}
       </div>
     </div>
@@ -230,14 +191,16 @@ function FlowStep({
     action: "bg-emerald-500",
   };
   return (
-    <div className={`border rounded p-2 ${tone[kind]}`}>
+    <div className={`border rounded px-1.5 py-1 ${tone[kind]} min-w-0`}>
       <div className="flex items-center gap-1 mb-0.5">
-        <span className={`h-1.5 w-1.5 rounded-full ${dot[kind]}`} />
-        <span className="text-[10px] font-semibold text-neutral-800">
+        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dot[kind]}`} />
+        <span className="text-[10px] font-semibold text-neutral-800 truncate">
           {label}
         </span>
       </div>
-      <div className="text-[10px] text-neutral-600 leading-snug">{detail}</div>
+      <div className="text-[9px] text-neutral-600 leading-snug truncate">
+        {detail}
+      </div>
     </div>
   );
 }
@@ -273,7 +236,7 @@ function NoteCard({
       ? "border-brand-200 bg-brand-50/30"
       : "border-slate-200 bg-slate-50/60";
   return (
-    <div className={`rounded-md border p-3 ${c}`}>
+    <div className={`rounded-md border p-2.5 ${c}`}>
       <div className="text-xs font-semibold text-neutral-900 mb-1">
         {title}
       </div>
