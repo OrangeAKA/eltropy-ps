@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CatalogTab } from "@/components/mission-control/CatalogTab";
 import { ComposerTab } from "@/components/mission-control/ComposerTab";
@@ -14,16 +14,23 @@ type Props = {
 
 export function MissionControlPane({ state }: Props) {
   const [activeTab, setActiveTab] = useState<string>("composer");
+  const prevPhase = useRef(state.phase);
 
-  // Auto-switch to runtime tab when workflow starts streaming logs
+  // Auto-switch on phase TRANSITIONS only, never on steady-state.
+  // This lets the user freely click Catalog/Runtime in idle without being
+  // reset back to Composer on the next render.
   useEffect(() => {
-    if (state.phase === "executing_skill" && activeTab !== "runtime") {
+    const wasIdle = prevPhase.current === "idle";
+    const isExecuting = state.phase === "executing_skill";
+    const justReset = !wasIdle && state.phase === "idle";
+
+    if (wasIdle && isExecuting) {
       setActiveTab("runtime");
-    }
-    if (state.phase === "idle") {
+    } else if (justReset) {
       setActiveTab("composer");
     }
-  }, [state.phase, activeTab]);
+    prevPhase.current = state.phase;
+  }, [state.phase]);
 
   return (
     <div className="h-full flex flex-col bg-white border-r border-neutral-200">
