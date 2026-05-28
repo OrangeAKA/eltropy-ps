@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
   Loader2,
   CheckCircle2,
   Send,
@@ -15,6 +14,7 @@ import {
   Wallet,
   Clock,
 } from "lucide-react";
+import { EltropyMark } from "@/components/shared/EltropyMark";
 import type {
   DemoState,
   LoanOffer,
@@ -54,7 +54,7 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
     <div className="flex flex-col h-full bg-neutral-50/40">
       <div className="px-3 py-2 border-b border-neutral-200 bg-white">
         <div className="flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-brand-600" />
+          <EltropyMark className="h-3.5 w-3.5 text-brand-600" />
           <span className="text-xs font-semibold">Copilot</span>
           <span className="ml-auto text-[10px] text-neutral-500">
             {PHASE_LABEL[state.phase]}
@@ -244,7 +244,7 @@ function OfferCard({
     >
       <Card className="p-3 border-brand-300 shadow-md gap-2">
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="h-4 w-4 text-brand-600" />
+          <EltropyMark className="h-4 w-4 text-brand-600" />
           <span className="font-medium text-sm">Pre-qualified offer</span>
           <Badge className="ml-auto bg-emerald-100 text-emerald-700 text-[10px]">
             Approved

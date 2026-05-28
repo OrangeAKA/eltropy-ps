@@ -7,17 +7,25 @@ import type { AuditLogEntry as AuditLogEntryType } from "@/lib/types";
 type Props = { entry: AuditLogEntryType };
 
 const LEVEL_COLOR: Record<AuditLogEntryType["level"], string> = {
-  INFO: "text-emerald-700",
+  INFO: "text-slate-700",
   DEBUG: "text-neutral-500",
   WARN: "text-amber-700",
   ERROR: "text-rose-700",
 };
 
 const LEVEL_BG: Record<AuditLogEntryType["level"], string> = {
-  INFO: "bg-emerald-50",
+  INFO: "bg-slate-100",
   DEBUG: "bg-neutral-100",
   WARN: "bg-amber-50",
   ERROR: "bg-rose-50",
+};
+
+// Left rail color, gives each line a quick scannable severity cue.
+const LEVEL_RAIL: Record<AuditLogEntryType["level"], string> = {
+  INFO: "border-l-slate-300",
+  DEBUG: "border-l-neutral-200",
+  WARN: "border-l-amber-400",
+  ERROR: "border-l-rose-500",
 };
 
 export function AuditLogEntry({ entry }: Props) {
@@ -29,7 +37,10 @@ export function AuditLogEntry({ entry }: Props) {
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="font-mono text-[11px] leading-snug py-1 px-2 hover:bg-neutral-100 rounded"
+      className={cn(
+        "font-mono text-[11px] leading-snug py-1 pl-2 pr-2 hover:bg-neutral-100 rounded-r border-l-2",
+        LEVEL_RAIL[entry.level],
+      )}
     >
       <div className="flex items-baseline gap-2">
         <span className="text-neutral-400 tabular-nums">{elapsedFmt}</span>
@@ -41,6 +52,9 @@ export function AuditLogEntry({ entry }: Props) {
           )}
         >
           {entry.level.padEnd(5)}
+        </span>
+        <span className="text-neutral-400 text-[10px]">
+          {entry.component}
         </span>
         <span className="text-neutral-700 break-all whitespace-pre-wrap">
           {entry.message}
