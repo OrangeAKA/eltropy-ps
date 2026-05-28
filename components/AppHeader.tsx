@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, RotateCcw } from "lucide-react";
 import { EltropyMark } from "@/components/shared/EltropyMark";
 import { VendorMonogram } from "@/components/shared/VendorMonogram";
+import { ArchitectureDialog } from "@/components/ArchitectureDialog";
 
 type Props = {
   onTriggerClick: () => void;
@@ -23,7 +25,34 @@ const SYSTEMS: Array<{
   { name: "Eltropy Voice", vendor: "eltropy", status: "connected" },
 ];
 
+/**
+ * Small custom glyph for the "How it works" button. Two interlocking arrows
+ * suggest the orchestrator's translation step: free text in, structured out.
+ */
+function ArchitectureGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
+      <circle cx="6" cy="6" r="2" />
+      <circle cx="18" cy="6" r="2" />
+      <circle cx="12" cy="18" r="2" />
+      <path d="M8 7 L11 16" />
+      <path d="M16 7 L13 16" />
+      <path d="M7 5 L17 5" strokeDasharray="2 2" />
+    </svg>
+  );
+}
+
 export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props) {
+  const [archOpen, setArchOpen] = useState(false);
   return (
     <header className="border-b border-neutral-200 bg-white px-4 py-2.5 flex items-center gap-4 shrink-0">
       <div className="flex items-center gap-2.5 shrink-0">
@@ -68,6 +97,16 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
       </div>
 
       <div className="flex items-center gap-2 ml-auto shrink-0">
+        <Button
+          onClick={() => setArchOpen(true)}
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 h-8 text-neutral-600 hover:text-brand-700"
+        >
+          <ArchitectureGlyph className="h-3.5 w-3.5" />
+          How it works
+        </Button>
+        <ArchitectureDialog open={archOpen} onOpenChange={setArchOpen} />
         <Button
           onClick={onReset}
           variant="ghost"
