@@ -74,6 +74,7 @@ export function MissionControlPane({ state }: Props) {
               activeSkillId={state.activeSkillId}
               completedSkillIds={state.completedSkillIds}
               workflowId={state.workflowId}
+              skillResults={state.context.skillResults}
             />
           </TabsContent>
           <TabsContent value="runtime" className="h-full m-0">
