@@ -22,6 +22,7 @@ const SYSTEM_PROMPT = `You are an intent classifier for a US credit union's memb
 - refinance_inquiry: Member wants to refinance an EXISTING loan
 - card_dispute: Member wants to dispute a charge, report fraud, or block a card
 - balance_inquiry: Member is asking about their account balance or recent transactions
+- transfer_funds: Member wants to MOVE money between their own accounts (savings ↔ checking, etc.) or to another member
 - general_handoff: Anything else, unclear, or out of scope
 
 Also extract relevant entities (only include keys with confident values):
@@ -42,6 +43,10 @@ Card dispute:
 - merchant: merchant name as it appears on the statement, if mentioned (e.g., "TICKETLY*GHOST")
 - transaction_date: ISO date or natural-language reference if given (e.g., "last Tuesday", "2026-05-21")
 - card_last4: last 4 digits of card if mentioned
+
+Transfer funds:
+- from_account_type: "savings" | "checking" | "money_market" — source
+- to_account_type: "savings" | "checking" | "money_market" — destination
 
 Confidence is your assessment from 0.0 to 1.0.
 

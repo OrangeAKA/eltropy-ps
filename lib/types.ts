@@ -27,6 +27,7 @@ export type IntentName =
   | "refinance_inquiry"
   | "card_dispute"
   | "balance_inquiry"
+  | "transfer_funds"
   | "general_handoff";
 
 export type IntentEntities = Record<string, string | number | boolean>;
@@ -111,6 +112,55 @@ export type DisputeDetails = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// Transfer (used by stepup-auth + transfer-policy + transfer-execute skills)
+// ────────────────────────────────────────────────────────────────────────────
+
+export type StepUpAuthResult = {
+  method: "verbal_on_voice" | "push_approval" | "sms_otp" | "secure_link";
+  approved: boolean;
+  promptedAt: string;
+  respondedAt?: string;
+  channel: TriggerChannel;
+  deviceLabel?: string;
+  rationale: string;
+};
+
+export type TransferPolicyDecision = {
+  allowed: boolean;
+  amount: number;
+  fromAccountId: string;
+  toAccountId: string;
+  dailyLimitUsd: number;
+  dailyUsedUsd: number;
+  blocks: string[];
+  citations: string[];
+  rationale: string;
+};
+
+export type TransferExecutionResult = {
+  confirmationNumber: string;
+  postedAt: string;
+  fromAccountId: string;
+  fromNewBalance: number;
+  toAccountId: string;
+  toNewBalance: number;
+  amount: number;
+};
+
+export type TransferDetails = {
+  amount: number;
+  fromAccountType: string;
+  toAccountType: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+  stepUp?: StepUpAuthResult;
+  policy?: TransferPolicyDecision;
+  execution?: TransferExecutionResult;
+  escalated?: boolean;
+  escalationReason?: string;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // Balance inquiry (used by account-summary skill)
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -147,6 +197,7 @@ export type WorkflowContext = {
   loanOffer?: LoanOffer;
   disputeDetails?: DisputeDetails;
   accountSummary?: AccountSummary;
+  transferDetails?: TransferDetails;
 };
 
 // ────────────────────────────────────────────────────────────────────────────

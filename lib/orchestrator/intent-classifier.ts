@@ -64,6 +64,7 @@ function normalizeIntent(raw?: string): IntentName {
     "refinance_inquiry",
     "card_dispute",
     "balance_inquiry",
+    "transfer_funds",
     "general_handoff",
   ];
   if (raw && (allowed as string[]).includes(raw)) return raw as IntentName;
@@ -86,6 +87,13 @@ async function keywordClassify(body: string): Promise<IntentClassification> {
 }
 
 function detectIntent(body: string): IntentName {
+  if (
+    /(transfer|move (some )?(money|funds)|send (money|funds)|move \$|from (my )?(savings|checking) (to|into))/i.test(
+      body,
+    )
+  ) {
+    return "transfer_funds";
+  }
   if (
     /(refi|refinance|lower (my )?rate|reduce (my )?payment|lower monthly)/i.test(body)
   ) {
@@ -136,7 +144,26 @@ function extractEntities(body: string): IntentEntities {
     entities.product = "heloc";
   }
 
+  const fromMatch = body.match(
+    /from\s+(?:my\s+)?(savings|checking|money[\s-]?market)/i,
+  );
+  if (fromMatch) {
+    entities.from_account_type = normalizeAccountType(fromMatch[1]);
+  }
+  const toMatch = body.match(
+    /(?:to|into)\s+(?:my\s+)?(savings|checking|money[\s-]?market)/i,
+  );
+  if (toMatch) {
+    entities.to_account_type = normalizeAccountType(toMatch[1]);
+  }
+
   return entities;
+}
+
+function normalizeAccountType(raw: string): string {
+  const t = raw.toLowerCase().replace(/[\s-]/g, "_");
+  if (t.startsWith("money")) return "money_market";
+  return t;
 }
 
 function computeConfidence(body: string, intent: IntentName): number {

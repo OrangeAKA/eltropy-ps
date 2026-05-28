@@ -28,7 +28,17 @@ import { executeESignDispatch } from "@/lib/skills/e-sign-dispatch";
 import { executeTransactionLookup } from "@/lib/skills/transaction-lookup";
 import { executeDisputeFile } from "@/lib/skills/dispute-file";
 import { executeAccountSummary } from "@/lib/skills/account-summary";
-import type { DisputeDetails, AccountSummary } from "@/lib/types";
+import { executeStepUpAuth } from "@/lib/skills/stepup-auth";
+import { executeTransferPolicyCheck } from "@/lib/skills/transfer-policy-check";
+import { executeTransferExecute } from "@/lib/skills/transfer-execute";
+import type {
+  DisputeDetails,
+  AccountSummary,
+  StepUpAuthResult,
+  TransferPolicyDecision,
+  TransferExecutionResult,
+  TransferDetails,
+} from "@/lib/types";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Public types
@@ -94,6 +104,24 @@ export async function runWorkflow(
     intent,
     skillResults: {},
   };
+
+  // Seed transferDetails from the LLM-extracted entities so downstream
+  // skills + UI cards have something to render from step 1.
+  if (intent.intent === "transfer_funds") {
+    const entities = intent.entities;
+    const amount = (entities.amount as number | undefined) ?? 0;
+    const fromType = (entities.from_account_type as string | undefined) ?? "savings";
+    const toType = (entities.to_account_type as string | undefined) ?? "checking";
+    const from = member.products.find((p) => p.type === fromType);
+    const to = member.products.find((p) => p.type === toType);
+    context.transferDetails = {
+      amount,
+      fromAccountType: fromType,
+      toAccountType: toType,
+      fromAccountId: from?.accountId,
+      toAccountId: to?.accountId,
+    };
+  }
 
   callbacks.onLog(
     makeLog(
@@ -172,6 +200,44 @@ export async function runWorkflow(
     if (step.skillId === "skill-account-summary" && result.outputs) {
       const out = result.outputs as { summary: AccountSummary };
       context.accountSummary = out.summary;
+    }
+    // Capture step-up auth outcome
+    if (step.skillId === "skill-stepup-auth" && result.outputs) {
+      const out = result.outputs as { stepUp: StepUpAuthResult };
+      context.transferDetails = {
+        ...(context.transferDetails ?? {
+          amount: 0,
+          fromAccountType: "",
+          toAccountType: "",
+        }),
+        stepUp: out.stepUp,
+      };
+    }
+    // Capture transfer policy decision
+    if (step.skillId === "skill-transfer-policy-check" && result.outputs) {
+      const out = result.outputs as { decision: TransferPolicyDecision };
+      context.transferDetails = {
+        ...(context.transferDetails ?? {
+          amount: out.decision.amount,
+          fromAccountType: "",
+          toAccountType: "",
+        }),
+        policy: out.decision,
+        fromAccountId: out.decision.fromAccountId || context.transferDetails?.fromAccountId,
+        toAccountId: out.decision.toAccountId || context.transferDetails?.toAccountId,
+      };
+    }
+    // Capture executed transfer
+    if (step.skillId === "skill-transfer-execute" && result.outputs) {
+      const out = result.outputs as { execution: TransferExecutionResult };
+      context.transferDetails = {
+        ...(context.transferDetails ?? {
+          amount: out.execution.amount,
+          fromAccountType: "",
+          toAccountType: "",
+        }),
+        execution: out.execution,
+      };
     }
 
     callbacks.onLog(
@@ -262,6 +328,101 @@ export async function runWorkflow(
       );
       callbacks.onComplete();
       return context;
+    }
+
+    // Halt cleanly if step-up auth was not approved — route to officer for
+    // callback verification. The audit log already has the rationale.
+    if (
+      step.skillId === "skill-stepup-auth" &&
+      context.transferDetails?.stepUp &&
+      !context.transferDetails.stepUp.approved
+    ) {
+      context.transferDetails = {
+        ...context.transferDetails,
+        escalated: true,
+        escalationReason:
+          context.transferDetails.stepUp.rationale ??
+          "Step-up auth not delivered",
+      };
+      callbacks.onLog(
+        makeLog(
+          startedAt,
+          "WARN",
+          "workflow.escalate",
+          `workflow.escalate(reason=stepup_auth_failed) — routed to officer for callback verification`,
+        ),
+      );
+      callbacks.onComplete();
+      return context;
+    }
+
+    // Halt cleanly if transfer policy blocked the request — cite the rule(s).
+    if (
+      step.skillId === "skill-transfer-policy-check" &&
+      context.transferDetails?.policy &&
+      !context.transferDetails.policy.allowed
+    ) {
+      const policy = context.transferDetails.policy;
+      context.transferDetails = {
+        ...context.transferDetails,
+        escalated: true,
+        escalationReason: policy.blocks.join("; "),
+      };
+      callbacks.onLog(
+        makeLog(
+          startedAt,
+          "WARN",
+          "workflow.halt",
+          `workflow.halt(reason=policy_block) — ${policy.rationale}`,
+        ),
+      );
+      callbacks.onComplete();
+      return context;
+    }
+
+    // Policy passed — pause for officer confirm before money actually moves.
+    // The officer is accountable for hitting Execute; the member's verbal /
+    // step-up authorization is on record; the rules cleared the request.
+    // This is the same gate pattern as the loan-offer dispatch.
+    if (
+      step.skillId === "skill-transfer-policy-check" &&
+      context.transferDetails?.policy?.allowed
+    ) {
+      const td = context.transferDetails;
+      callbacks.onLog(
+        makeLog(
+          startedAt,
+          "INFO",
+          "workflow.pause",
+          `workflow.pause(reason=awaiting_human_confirm) — transfer ready for officer posting`,
+        ),
+      );
+      try {
+        await callbacks.awaitConfirm({
+          skillId: "skill-transfer-execute",
+          title: "Post transfer to member's accounts?",
+          summary: `$${td.amount.toLocaleString()} from ${td.fromAccountType} (${td.fromAccountId ?? "—"}) → ${td.toAccountType} (${td.toAccountId ?? "—"})`,
+        });
+      } catch {
+        callbacks.onLog(
+          makeLog(
+            startedAt,
+            "WARN",
+            "workflow.abort",
+            `workflow.abort() — officer cancelled transfer before posting`,
+          ),
+        );
+        callbacks.onComplete();
+        return context;
+      }
+      callbacks.onLog(
+        makeLog(
+          startedAt,
+          "INFO",
+          "workflow.resume",
+          `workflow.resume() — officer confirmed transfer posting`,
+        ),
+      );
     }
 
     if (
@@ -437,6 +598,61 @@ async function dispatchSkill(
       return executeAccountSummary({
         member: context.member,
         accountTypeFilter: filter,
+      });
+    }
+
+    case "skill-stepup-auth": {
+      const td = context.transferDetails;
+      const idvOutputs = context.skillResults["skill-identity-verify"]?.outputs as
+        | { verified?: boolean }
+        | undefined;
+      const identityVerified = idvOutputs?.verified ?? false;
+      return executeStepUpAuth({
+        member: context.member,
+        channel: context.trigger.channel,
+        reason: td
+          ? `Transfer $${td.amount.toLocaleString()} ${td.fromAccountType} → ${td.toAccountType}`
+          : "Account-impacting action",
+        expectedAmountUsd: td?.amount,
+        identityVerified,
+      });
+    }
+
+    case "skill-transfer-policy-check": {
+      const td = context.transferDetails;
+      if (!td) {
+        return {
+          skillId,
+          status: "failed",
+          startedAt: new Date().toISOString(),
+          inputs: {},
+          error: "No transfer details in context",
+        };
+      }
+      return executeTransferPolicyCheck({
+        member: context.member,
+        amount: td.amount,
+        fromAccountType: td.fromAccountType,
+        toAccountType: td.toAccountType,
+      });
+    }
+
+    case "skill-transfer-execute": {
+      const td = context.transferDetails;
+      if (!td || !td.fromAccountId || !td.toAccountId) {
+        return {
+          skillId,
+          status: "failed",
+          startedAt: new Date().toISOString(),
+          inputs: {},
+          error: "Missing transfer account IDs after policy check",
+        };
+      }
+      return executeTransferExecute({
+        member: context.member,
+        amount: td.amount,
+        fromAccountId: td.fromAccountId,
+        toAccountId: td.toAccountId,
       });
     }
 

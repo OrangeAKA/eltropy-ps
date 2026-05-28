@@ -177,6 +177,55 @@ export const workflows: Workflow[] = [
     ],
   },
   {
+    id: 'workflow-005',
+    name: 'TransferFundsFlow',
+    displayName: 'Internal Funds Transfer',
+    description:
+      "Handles member-initiated transfers between their own deposit accounts. Resolves the member, verifies identity, issues a step-up auth challenge before any money moves (GLBA + FFIEC MFA), runs the policy check against daily limit and account standing, then executes the atomic debit/credit pair via SymXchange. Escalates to officer callback if step-up auth can't be delivered.",
+    triggerIntents: ['transfer_funds'],
+    steps: [
+      {
+        skillId: 'skill-member-lookup',
+        humanInTheLoop: false,
+        guardrails: { autoExecute: true },
+      },
+      {
+        skillId: 'skill-identity-verify',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Identity must verify before any account-impacting action',
+          autoExecute: true,
+        },
+      },
+      {
+        skillId: 'skill-stepup-auth',
+        displayName: 'Authorization Gate',
+        humanInTheLoop: true,
+        guardrails: {
+          condition: 'FFIEC risk-based MFA: verbal on recorded voice if under $25K, otherwise push or secure-link out-of-band.',
+          autoExecute: false,
+        },
+      },
+      {
+        skillId: 'skill-transfer-policy-check',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Daily limit $50K, sufficient funds, source/destination eligibility (Reg E §1005.10)',
+          autoExecute: true,
+        },
+      },
+      {
+        skillId: 'skill-transfer-execute',
+        displayName: 'Officer Post Transfer',
+        humanInTheLoop: true,
+        guardrails: {
+          condition: 'Officer reviews authorization + policy, then posts atomic debit/credit pair via SymXchange.',
+          autoExecute: false,
+        },
+      },
+    ],
+  },
+  {
     id: 'workflow-004',
     name: 'BalanceInquiryFlow',
     displayName: 'Balance Inquiry',

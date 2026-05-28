@@ -12,6 +12,9 @@ import {
   AlertTriangle,
   ShieldAlert,
   Clock,
+  Smartphone,
+  ArrowRightLeft,
+  PhoneCall,
 } from "lucide-react";
 import { EltropyMark } from "@/components/shared/EltropyMark";
 import type {
@@ -19,6 +22,7 @@ import type {
   LoanOffer,
   DisputeDetails,
   AccountSummary,
+  TransferDetails,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -45,9 +49,22 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
   const offer = state.context.loanOffer;
   const dispute = state.context.disputeDetails;
   const summary = state.context.accountSummary;
+  const transfer = state.context.transferDetails;
   const intent = state.context.intent;
   const awaitingDispute =
     state.awaitingConfirmFor?.skillId === "skill-dispute-file";
+  const awaitingTransfer =
+    state.awaitingConfirmFor?.skillId === "skill-transfer-execute";
+  const stepUpInFlight =
+    state.activeSkillId === "skill-stepup-auth" &&
+    state.phase === "executing_skill";
+  // For voice-channel, in-policy-threshold transfers, the auth method is
+  // verbal-on-voice — no out-of-band wait. The section content adapts.
+  const channel = state.context.trigger?.channel;
+  const stepUpIsVerbal =
+    channel === "voice" &&
+    transfer !== undefined &&
+    transfer.amount < 25_000;
   const reduceMotion = useReducedMotion();
 
   return (
@@ -119,8 +136,17 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
               </motion.section>
             )}
 
-            {state.activeSkillId && state.phase === "executing_skill" && (
-              <ActiveSkillSection skillId={state.activeSkillId} />
+            {state.activeSkillId &&
+              state.phase === "executing_skill" &&
+              !stepUpInFlight && (
+                <ActiveSkillSection skillId={state.activeSkillId} />
+              )}
+
+            {stepUpInFlight && transfer && (
+              <StepUpAuthPendingSection
+                transfer={transfer}
+                verbal={stepUpIsVerbal}
+              />
             )}
 
             <AnimatePresence>
@@ -149,7 +175,20 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
 
               <AnimatePresence>
                 {state.phase === "awaiting_human_confirm" &&
+                  awaitingTransfer &&
+                  transfer && (
+                    <OfficerConfirmTransferCard
+                      transfer={transfer}
+                      onConfirm={onConfirm}
+                      onModify={onModify}
+                    />
+                  )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {state.phase === "awaiting_human_confirm" &&
                   !awaitingDispute &&
+                  !awaitingTransfer &&
                   offer && (
                     <OfferCard
                       offer={offer}
@@ -181,13 +220,35 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
                     elapsedMs={state.auditLog[state.auditLog.length - 1]?.elapsedMs ?? 0}
                   />
                 )}
-                {state.phase === "completed" && summary && !offer && !dispute && (
-                  <BalanceCompletionCard
-                    summary={summary}
-                    totalLogs={state.auditLog.length}
-                    elapsedMs={state.auditLog[state.auditLog.length - 1]?.elapsedMs ?? 0}
-                  />
-                )}
+                {state.phase === "completed" &&
+                  summary &&
+                  !offer &&
+                  !dispute &&
+                  !transfer && (
+                    <BalanceCompletionCard
+                      summary={summary}
+                      totalLogs={state.auditLog.length}
+                      elapsedMs={state.auditLog[state.auditLog.length - 1]?.elapsedMs ?? 0}
+                    />
+                  )}
+                {state.phase === "completed" &&
+                  transfer &&
+                  transfer.execution && (
+                    <TransferCompletionCard
+                      transfer={transfer}
+                      totalLogs={state.auditLog.length}
+                      elapsedMs={state.auditLog[state.auditLog.length - 1]?.elapsedMs ?? 0}
+                    />
+                  )}
+                {state.phase === "completed" &&
+                  transfer &&
+                  !transfer.execution && (
+                    <TransferEscalatedCard
+                      transfer={transfer}
+                      totalLogs={state.auditLog.length}
+                      elapsedMs={state.auditLog[state.auditLog.length - 1]?.elapsedMs ?? 0}
+                    />
+                  )}
               </AnimatePresence>
             </div>
           </>
@@ -713,6 +774,320 @@ function SurfaceNote({
       <div className="mb-0.5 font-medium">{title}</div>
       {children}
     </div>
+  );
+}
+
+function StepUpAuthPendingSection({
+  transfer,
+  verbal,
+}: {
+  transfer: TransferDetails;
+  verbal: boolean;
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.24, ease: [0.25, 1, 0.5, 1] }}
+      className="border-b border-rule px-3 py-2.5"
+    >
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <SectionLabel>Authorization gate</SectionLabel>
+        <span
+          className={cn(
+            "text-[10px] font-mono",
+            verbal ? "text-brand-700" : "text-amber-700",
+          )}
+        >
+          {verbal ? "verifying policy" : "awaiting member"}
+        </span>
+      </div>
+      {verbal ? (
+        <div className="rounded-xl border border-brand-200 bg-brand-50/75 px-2.5 py-2">
+          <div className="flex items-center gap-2">
+            <PhoneCall className="h-3.5 w-3.5 shrink-0 text-brand-700" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-medium text-brand-900">
+                Verbal authorization on recorded line
+              </div>
+              <div className="text-[10px] text-brand-800">
+                Voice channel + identity verified + $
+                {transfer.amount.toLocaleString()} under $25K threshold.
+                FFIEC risk-based MFA: no separate second factor needed.
+              </div>
+            </div>
+            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-brand-600" />
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-2.5 py-2">
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-3.5 w-3.5 shrink-0 text-amber-700" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-medium text-amber-900">
+                Step-up approval sent
+              </div>
+              <div className="text-[10px] text-amber-800">
+                $ {transfer.amount.toLocaleString()} {transfer.fromAccountType}{" "}
+                → {transfer.toAccountType} requires member tap-to-approve on
+                their registered device.
+              </div>
+            </div>
+            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-amber-700" />
+          </div>
+          <div className="mt-1.5 text-[10px] text-amber-800/80 leading-snug">
+            Channel or amount triggered out-of-band auth. Execution blocked
+            until approved.
+          </div>
+        </div>
+      )}
+    </motion.section>
+  );
+}
+
+function OfficerConfirmTransferCard({
+  transfer,
+  onConfirm,
+  onModify,
+}: {
+  transfer: TransferDetails;
+  onConfirm: () => void;
+  onModify: () => void;
+}) {
+  const method = transfer.stepUp?.method;
+  const methodLabel =
+    method === "verbal_on_voice"
+      ? "Verbal on recorded voice"
+      : method === "push_approval"
+        ? "Push approval (mobile)"
+        : method === "secure_link"
+          ? "Secure-link confirm (SMS)"
+          : "—";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.24, ease: [0.25, 1, 0.5, 1] }}
+    >
+      <Card className="gap-2 border-brand-300 bg-[color:color-mix(in_oklch,var(--color-surface-card)_92%,white)] p-3">
+        <div className="mb-1 flex items-center gap-2">
+          <ArrowRightLeft className="h-4 w-4 text-brand-700" />
+          <span className="text-sm font-medium text-neutral-900">
+            Post internal transfer
+          </span>
+          <Badge className="ml-auto bg-brand-50 text-brand-700 text-[10px]">
+            ${transfer.amount.toLocaleString()}
+          </Badge>
+        </div>
+
+        <Card className="gap-1 border-rule bg-white p-2.5">
+          <div className="text-[11px] text-neutral-500 font-mono tabular-nums">
+            from {transfer.fromAccountType} · {transfer.fromAccountId ?? "—"}
+          </div>
+          <div className="text-[11px] text-neutral-500 font-mono tabular-nums">
+            to {transfer.toAccountType} · {transfer.toAccountId ?? "—"}
+          </div>
+        </Card>
+
+        <SurfaceNote title="Member authorization" tone="brand">
+          {methodLabel}
+          {transfer.stepUp?.deviceLabel && (
+            <span className="block text-[10px] text-brand-800/80 mt-0.5">
+              {transfer.stepUp.deviceLabel}
+            </span>
+          )}
+        </SurfaceNote>
+
+        {transfer.policy && (
+          <SurfaceNote title="Policy clearance">
+            Cleared {transfer.policy.citations.length} rule check
+            {transfer.policy.citations.length === 1 ? "" : "s"}. Daily used $
+            {transfer.policy.dailyUsedUsd.toLocaleString()} of $
+            {transfer.policy.dailyLimitUsd.toLocaleString()}.
+          </SurfaceNote>
+        )}
+
+        <div className="mt-2 flex gap-1.5">
+          <Button onClick={onConfirm} size="sm" className="h-8 flex-1 gap-1.5">
+            <Send className="h-3.5 w-3.5" />
+            Post transfer
+          </Button>
+          <Button
+            onClick={onModify}
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5"
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+            Cancel
+          </Button>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+function TransferCompletionCard({
+  transfer,
+  totalLogs,
+  elapsedMs,
+}: {
+  transfer: TransferDetails;
+  totalLogs: number;
+  elapsedMs: number;
+}) {
+  const exec = transfer.execution!;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+    >
+      <Card className="gap-2 border-brand-300 bg-brand-50/75 p-3">
+        <div className="mb-1 flex items-center gap-2">
+          <ArrowRightLeft className="h-4 w-4 text-brand-700" />
+          <span className="text-sm font-medium text-brand-900">
+            Transfer posted
+          </span>
+          <Badge className="ml-auto bg-white text-brand-700 text-[10px]">
+            ${exec.amount.toLocaleString()}
+          </Badge>
+        </div>
+
+        <div className="rounded-lg border border-rule bg-white p-2 space-y-1.5">
+          <div className="flex items-baseline justify-between gap-2 text-[11px]">
+            <span className="font-mono tabular-nums text-neutral-500">
+              {exec.fromAccountId}
+            </span>
+            <span className="font-mono tabular-nums text-neutral-900">
+              ${exec.fromNewBalance.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 text-[11px]">
+            <span className="font-mono tabular-nums text-neutral-500">
+              {exec.toAccountId}
+            </span>
+            <span className="font-mono tabular-nums text-neutral-900">
+              ${exec.toNewBalance.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+        </div>
+
+        <SurfaceNote title="Confirmation" tone="brand">
+          <span className="font-mono tabular-nums">{exec.confirmationNumber}</span>
+          <span className="text-brand-800/80"> · posted via SymXchange</span>
+        </SurfaceNote>
+
+        <div className="mt-1 grid grid-cols-2 gap-2 text-[10px]">
+          <div>
+            <div className="uppercase tracking-[0.12em] text-brand-700/80">
+              Audit events
+            </div>
+            <div className="font-mono tabular-nums text-brand-900">
+              {totalLogs}
+            </div>
+          </div>
+          <div>
+            <div className="uppercase tracking-[0.12em] text-brand-700/80">
+              Total time
+            </div>
+            <div className="font-mono tabular-nums text-brand-900">
+              {(elapsedMs / 1000).toFixed(1)}s
+            </div>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+function TransferEscalatedCard({
+  transfer,
+  totalLogs,
+  elapsedMs,
+}: {
+  transfer: TransferDetails;
+  totalLogs: number;
+  elapsedMs: number;
+}) {
+  const stepUpFailed = transfer.stepUp && !transfer.stepUp.approved;
+  const policyBlocked = transfer.policy && !transfer.policy.allowed;
+  const title = stepUpFailed
+    ? "Routed to officer for callback verification"
+    : policyBlocked
+      ? "Transfer blocked by policy"
+      : "Transfer held pending review";
+  const icon = stepUpFailed ? (
+    <PhoneCall className="h-4 w-4 text-amber-700" />
+  ) : (
+    <ShieldAlert className="h-4 w-4 text-amber-700" />
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+    >
+      <Card className="gap-2 border-amber-300 bg-amber-50/85 p-3">
+        <div className="mb-1 flex items-center gap-2">
+          {icon}
+          <span className="text-sm font-medium text-amber-900">{title}</span>
+        </div>
+
+        <p className="text-xs leading-relaxed text-amber-900">
+          {stepUpFailed
+            ? `$${transfer.amount.toLocaleString()} ${transfer.fromAccountType} → ${transfer.toAccountType} request received. ${transfer.stepUp?.rationale ?? ""}`
+            : policyBlocked
+              ? transfer.policy?.rationale ?? ""
+              : transfer.escalationReason ?? ""}
+        </p>
+
+        {policyBlocked && transfer.policy && (
+          <SurfaceNote title="Rule citations" tone="amber">
+            <ul className="space-y-0.5 mt-0.5">
+              {transfer.policy.citations.map((c, i) => (
+                <li key={i} className="font-mono tabular-nums text-[10px]">
+                  · {c}
+                </li>
+              ))}
+            </ul>
+          </SurfaceNote>
+        )}
+
+        <SurfaceNote title="Next step" tone="amber">
+          {stepUpFailed
+            ? "Sarah will call the member back on a verified line, complete KBA, and re-run the transfer through Mission Control under officer authorization."
+            : "Member receives a templated SMS explaining the block + how to proceed (raise the limit, use a different source, or visit a branch)."}
+        </SurfaceNote>
+
+        <div className="mt-1 grid grid-cols-2 gap-2 text-[10px]">
+          <div>
+            <div className="uppercase tracking-[0.12em] text-amber-700/80">
+              Audit events
+            </div>
+            <div className="font-mono tabular-nums text-amber-900">
+              {totalLogs}
+            </div>
+          </div>
+          <div>
+            <div className="uppercase tracking-[0.12em] text-amber-700/80">
+              Total time
+            </div>
+            <div className="font-mono tabular-nums text-amber-900">
+              {(elapsedMs / 1000).toFixed(1)}s
+            </div>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
   );
 }
 
