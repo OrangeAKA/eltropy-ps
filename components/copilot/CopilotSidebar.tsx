@@ -350,12 +350,16 @@ function AwaitingApprovalSection({
           variant="outline"
           className="h-5 rounded-full border-amber-200 bg-amber-50 px-1.5 text-[9px] uppercase tracking-[0.12em] text-amber-800"
         >
-          approval required
+          your approval
         </Badge>
       </div>
       <p className="text-xs font-medium text-neutral-900">{title}</p>
       <p className="mt-1 text-[11px] leading-relaxed text-neutral-600">
         {summary}
+      </p>
+      <p className="mt-1.5 text-[10px] leading-snug text-neutral-500">
+        Sarah, the system needs your sign-off before posting. Your officer ID
+        + timestamp will be written to the audit log.
       </p>
     </section>
   );
@@ -880,6 +884,13 @@ function OfficerConfirmTransferCard({
             ${transfer.amount.toLocaleString()}
           </Badge>
         </div>
+
+        <p className="text-[11px] leading-snug text-neutral-600">
+          Your sign-off, Sarah. Member authorization is on record and the
+          rules layer cleared the request — but the system won't post until
+          you click below. Your officer ID + timestamp get written to the
+          audit log on click.
+        </p>
 
         <Card className="gap-1 border-rule bg-white p-2.5">
           <div className="text-[11px] text-neutral-500 font-mono tabular-nums">

@@ -52,13 +52,36 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         auditLog: [...state.auditLog, action.log],
       };
 
-    case "INTENT_CLASSIFIED":
+    case "INTENT_CLASSIFIED": {
+      // Seed transferDetails from the LLM-extracted entities so the
+      // OfficerConfirmTransferCard + pending sections can render from
+      // skill 1 onward.
+      let transferDetails = state.context.transferDetails;
+      if (action.intent.intent === "transfer_funds") {
+        const entities = action.intent.entities;
+        const amount = (entities.amount as number | undefined) ?? 0;
+        const fromType =
+          (entities.from_account_type as string | undefined) ?? "savings";
+        const toType =
+          (entities.to_account_type as string | undefined) ?? "checking";
+        const member = state.context.member;
+        const from = member?.products.find((p) => p.type === fromType);
+        const to = member?.products.find((p) => p.type === toType);
+        transferDetails = {
+          amount,
+          fromAccountType: fromType,
+          toAccountType: toType,
+          fromAccountId: from?.accountId,
+          toAccountId: to?.accountId,
+        };
+      }
       return {
         ...state,
         phase: "classifying_intent",
-        context: { ...state.context, intent: action.intent },
+        context: { ...state.context, intent: action.intent, transferDetails },
         auditLog: [...state.auditLog, action.log],
       };
+    }
 
     case "WORKFLOW_ROUTED":
       return {
@@ -88,6 +111,7 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
       let loanOffer = state.context.loanOffer;
       let disputeDetails = state.context.disputeDetails;
       let accountSummary = state.context.accountSummary;
+      let transferDetails = state.context.transferDetails;
       if (
         action.result.skillId === "skill-loan-decisioning" &&
         action.result.outputs
@@ -115,6 +139,81 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         };
         if (o.summary) accountSummary = o.summary;
       }
+      if (
+        action.result.skillId === "skill-stepup-auth" &&
+        action.result.outputs
+      ) {
+        const o = action.result.outputs as {
+          stepUp?: NonNullable<
+            DemoState["context"]["transferDetails"]
+          >["stepUp"];
+        };
+        if (o.stepUp) {
+          const base = transferDetails ?? {
+            amount: 0,
+            fromAccountType: "",
+            toAccountType: "",
+          };
+          const escalated = !o.stepUp.approved;
+          transferDetails = {
+            ...base,
+            stepUp: o.stepUp,
+            escalated: escalated || base.escalated,
+            escalationReason: escalated
+              ? o.stepUp.rationale
+              : base.escalationReason,
+          };
+        }
+      }
+      if (
+        action.result.skillId === "skill-transfer-policy-check" &&
+        action.result.outputs
+      ) {
+        const o = action.result.outputs as {
+          decision?: NonNullable<
+            DemoState["context"]["transferDetails"]
+          >["policy"];
+        };
+        if (o.decision) {
+          const base = transferDetails ?? {
+            amount: o.decision.amount,
+            fromAccountType: "",
+            toAccountType: "",
+          };
+          const blocked = !o.decision.allowed;
+          transferDetails = {
+            ...base,
+            policy: o.decision,
+            fromAccountId: o.decision.fromAccountId || base.fromAccountId,
+            toAccountId: o.decision.toAccountId || base.toAccountId,
+            escalated: blocked || base.escalated,
+            escalationReason: blocked
+              ? o.decision.blocks.join("; ")
+              : base.escalationReason,
+          };
+        }
+      }
+      if (
+        action.result.skillId === "skill-transfer-execute" &&
+        action.result.outputs
+      ) {
+        const o = action.result.outputs as {
+          execution?: NonNullable<
+            DemoState["context"]["transferDetails"]
+          >["execution"];
+        };
+        if (o.execution) {
+          const base = transferDetails ?? {
+            amount: o.execution.amount,
+            fromAccountType: "",
+            toAccountType: "",
+          };
+          transferDetails = {
+            ...base,
+            execution: o.execution,
+          };
+        }
+      }
       return {
         ...state,
         context: {
@@ -123,6 +222,7 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
           loanOffer,
           disputeDetails,
           accountSummary,
+          transferDetails,
         },
         completedSkillIds: completedIds,
         activeSkillId: undefined,
@@ -149,10 +249,14 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
       };
 
     case "USER_CONFIRMED": {
-      const isDispute = state.awaitingConfirmFor?.skillId === "skill-dispute-file";
+      const awaitingSkill = state.awaitingConfirmFor?.skillId;
+      const isDispute = awaitingSkill === "skill-dispute-file";
+      const isTransfer = awaitingSkill === "skill-transfer-execute";
       const officerText = isDispute
         ? "Filing this with the network now. You'll see provisional credit on your account today if it's under our $2,500 threshold."
-        : "Sending you a pre-qualified offer to review and e-sign now.";
+        : isTransfer
+          ? "Posting that transfer now. You'll see the new balances on both accounts within a few seconds."
+          : "Sending you a pre-qualified offer to review and e-sign now.";
       return {
         ...state,
         phase: "executing_post_confirm",
@@ -198,6 +302,15 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         systemText = s
           ? `✓ Balances surfaced. Total deposits $${s.totalDeposits.toFixed(2)} across ${s.accounts.length} account${s.accounts.length === 1 ? "" : "s"}.`
           : "✓ Balances surfaced.";
+      } else if (intent === "transfer_funds") {
+        const t = state.context.transferDetails;
+        if (t?.execution) {
+          systemText = `✓ Transfer posted. $${t.execution.amount.toLocaleString()} moved. Confirmation ${t.execution.confirmationNumber}.`;
+        } else if (t?.escalated) {
+          systemText = `Held for review. ${t.escalationReason ?? "An officer will follow up shortly."}`;
+        } else {
+          systemText = "Transfer cancelled by officer.";
+        }
       }
       return {
         ...state,
