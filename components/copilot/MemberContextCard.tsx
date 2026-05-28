@@ -81,29 +81,7 @@ export function MemberContextCard({ member }: Props) {
             </div>
           </Card>
         </motion.div>
-      ) : (
-        <motion.div
-          key="empty"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <Card className="p-3 border-dashed bg-neutral-50/50 gap-1">
-            <div className="flex items-center gap-2 text-neutral-400">
-              <Avatar className="h-10 w-10 shrink-0">
-                <AvatarFallback className="bg-neutral-200 text-neutral-400 text-sm">
-                  ?
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-xs leading-tight">
-                <div className="font-medium">No member context</div>
-                <div className="text-[11px]">
-                  Send a trigger to resolve the inbound caller.
-                </div>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      )}
+      ) : null}
     </AnimatePresence>
   );
 }

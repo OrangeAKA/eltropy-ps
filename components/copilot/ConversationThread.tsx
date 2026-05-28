@@ -20,9 +20,18 @@ export function ConversationThread({ messages, channel }: Props) {
 
   if (messages.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-neutral-400 p-6">
-        <MessageSquare className="h-8 w-8 mb-2 opacity-50" />
-        <p className="text-xs">No incoming conversation yet</p>
+      <div className="h-full flex flex-col items-center justify-center text-center p-8">
+        <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center mb-3">
+          <MessageSquare className="h-5 w-5 text-blue-600" />
+        </div>
+        <p className="text-sm font-medium text-neutral-800 mb-1">
+          Waiting for an inbound member
+        </p>
+        <p className="text-xs text-neutral-500 leading-snug max-w-[260px]">
+          Click <span className="font-medium text-neutral-700">Send trigger</span> in the
+          header to simulate a call, SMS, or chat. The orchestrator will resolve
+          the member, route the workflow, and surface a recommended next step.
+        </p>
       </div>
     );
   }

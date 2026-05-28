@@ -35,9 +35,11 @@ export function CopilotPane({ state, onConfirm, onModify }: Props) {
         </div>
       </div>
 
-      <div className="p-3 border-b border-neutral-200">
-        <MemberContextCard member={state.context.member} />
-      </div>
+      {state.context.member && (
+        <div className="p-3 border-b border-neutral-200">
+          <MemberContextCard member={state.context.member} />
+        </div>
+      )}
 
       <div className="flex-1 grid grid-cols-[1fr_320px] min-h-0">
         <div className="min-h-0 border-r border-neutral-200">

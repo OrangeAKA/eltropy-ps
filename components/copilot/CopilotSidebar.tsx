@@ -127,20 +127,10 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
 
 function IdleState() {
   return (
-    <Card className="p-3 border-dashed bg-white/50 gap-1">
-      <div className="flex items-start gap-2">
-        <Sparkles className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-        <div className="text-xs text-neutral-600 leading-snug">
-          <div className="font-medium text-neutral-800 mb-1">
-            Ready to assist
-          </div>
-          <p>
-            Once a member contacts you, I'll surface their context, run the
-            assigned workflow, and recommend a next action for your approval.
-          </p>
-        </div>
-      </div>
-    </Card>
+    <div className="text-xs text-neutral-500 leading-snug px-1 py-2">
+      Intent, active skill, and recommended offer will appear here once a
+      member contacts you.
+    </div>
   );
 }
 
