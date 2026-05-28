@@ -37,31 +37,42 @@ export function MissionControlPane({ state }: Props) {
   }, [state.phase]);
 
   return (
-    <div className="h-full flex flex-col bg-white border-r border-neutral-200">
-      <div className="px-3 pt-3 pb-1.5 border-b border-neutral-200">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="font-serif text-[15px] font-medium tracking-[-0.01em]">
-            Mission Control
-          </h2>
-          <span className="text-[10px] text-neutral-500 font-mono tabular-nums">
-            cyprus-cu · prod
-          </span>
+    <div className="h-full flex flex-col bg-[color:color-mix(in_oklch,var(--color-surface-card)_90%,white)] border-r border-rule-strong">
+      <div className="px-3 pt-3 pb-2 border-b border-rule">
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div>
+            <h2 className="font-serif text-[15px] font-medium tracking-[-0.01em]">
+              Mission Control
+            </h2>
+            <p className="mt-0.5 max-w-[36ch] text-[11px] leading-snug text-neutral-500">
+              Catalog, workflow composition, and the live audit trail in one
+              operator surface.
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <span className="text-[10px] text-neutral-500 font-mono tabular-nums">
+              cyprus-cu · prod
+            </span>
+            <div className="mt-1 text-[10px] uppercase tracking-[0.12em] text-neutral-400">
+              audit-first view
+            </div>
+          </div>
         </div>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 w-full h-8">
-            <TabsTrigger value="catalog" className="text-xs gap-1.5">
+          <TabsList variant="line" className="grid grid-cols-3 w-full h-8 px-0">
+            <TabsTrigger value="catalog" className="text-xs gap-1.5 rounded-none">
               <CatalogGlyph className="h-3.5 w-3.5" />
               Catalog
             </TabsTrigger>
-            <TabsTrigger value="composer" className="text-xs gap-1.5">
+            <TabsTrigger value="composer" className="text-xs gap-1.5 rounded-none">
               <ComposerGlyph className="h-3.5 w-3.5" />
               Composer
             </TabsTrigger>
-            <TabsTrigger value="runtime" className="text-xs gap-1.5">
+            <TabsTrigger value="runtime" className="text-xs gap-1.5 rounded-none">
               <RuntimeGlyph className="h-3.5 w-3.5" />
               Runtime
               {state.auditLog.length > 0 && (
-                <span className="bg-neutral-200 text-neutral-700 rounded px-1 text-[9px] font-mono">
+                <span className="rounded-full border border-rule px-1.5 py-px text-[9px] font-mono text-neutral-600">
                   {state.auditLog.length}
                 </span>
               )}

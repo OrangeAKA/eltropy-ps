@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -79,22 +79,8 @@ export function TriggerModal({ open, onOpenChange, onSend }: Props) {
   const [channel, setChannel] = useState<TriggerChannel>("sms");
   const [isRecording, setIsRecording] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
-  const [speechSupported, setSpeechSupported] = useState(true);
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
-
-  // Detect Web Speech support on mount
-  useEffect(() => {
-    if (open) {
-      const SpeechRecognitionCtor = getSpeechRecognition();
-      setSpeechSupported(Boolean(SpeechRecognitionCtor));
-    }
-    if (!open) {
-      // Stop any in-flight recording when modal closes
-      stopRecording();
-      setSpeechError(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  const speechSupported = Boolean(getSpeechRecognition());
 
   const selectedMember = members.find((m) => m.id === selectedMemberId)!;
   const matchingTrigger = triggers.find(
@@ -169,46 +155,73 @@ export function TriggerModal({ open, onOpenChange, onSend }: Props) {
       fromPhone: selectedMember.phone,
       body: body.trim(),
     });
-    onOpenChange(false);
-    // Reset for next time
-    setTimeout(() => {
-      setBody("");
-      setChannel("sms");
-    }, 400);
+    handleOpenChange(false);
+    setBody("");
+    setChannel("sms");
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      stopRecording();
+      setSpeechError(null);
+    }
+    onOpenChange(nextOpen);
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-xl border border-rule-strong bg-[color:color-mix(in_oklch,var(--color-surface-card)_94%,white)]">
         <DialogHeader>
-          <DialogTitle className="text-base">
+          <DialogTitle className="text-base font-serif tracking-[-0.01em]">
             Send a member trigger to Mission Control
           </DialogTitle>
-          <DialogDescription className="text-xs">
-            Pick a member, then send their message. Speak, paste a preset, or type.
+          <DialogDescription className="text-xs leading-relaxed">
+            Pick a member and route their message into the demo. Voice, preset,
+            and manual entry all hit the same ingestion path.
           </DialogDescription>
         </DialogHeader>
 
         {/* Member picker */}
-        <section>
+        <section className="space-y-2">
           <Label>Member (resolves by phone)</Label>
+          <p className="text-[11px] leading-relaxed text-neutral-500">
+            The resolver will match the trigger on{" "}
+            <span className="font-mono tabular-nums text-neutral-700">
+              {selectedMember.phone}
+            </span>{" "}
+            before the workflow routes.
+          </p>
           <div className="grid grid-cols-2 gap-2 mt-1">
             {members.map((m) => (
               <button
                 key={m.id}
                 onClick={() => setSelectedMemberId(m.id)}
+                aria-pressed={selectedMemberId === m.id}
                 className={cn(
-                  "text-left p-2 border rounded-md transition",
+                  "rounded-lg border p-2 text-left transition-[border-color,background-color,box-shadow] duration-[var(--duration-fast)] ease-[var(--ease-out-quart)]",
                   selectedMemberId === m.id
-                    ? "border-brand-500 bg-brand-50/60"
-                    : "border-neutral-200 hover:border-neutral-400",
+                    ? "border-brand-300 bg-brand-50/75 shadow-[inset_0_0_0_1px_rgba(14,124,123,0.12)]"
+                    : "border-rule bg-white hover:border-brand-200",
                 )}
               >
-                <div className="text-sm font-medium leading-tight">
-                  {m.fullName}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-medium leading-tight">
+                      {m.fullName}
+                    </div>
+                    <div className="text-[10px] text-neutral-500 font-mono">
+                      {m.phone}
+                    </div>
+                  </div>
+                  {selectedMemberId === m.id && (
+                    <Badge className="bg-brand-50 text-brand-700 text-[9px]">
+                      Selected
+                    </Badge>
+                  )}
                 </div>
-                <div className="text-[10px] text-neutral-500 font-mono">
-                  {m.phone} · FICO {m.fico} · {m.memberTier}
+                <div className="mt-1 text-[10px] text-neutral-500">
+                  FICO <span className="font-mono">{m.fico}</span> ·{" "}
+                  {m.memberTier}
                 </div>
               </button>
             ))}
@@ -225,9 +238,9 @@ export function TriggerModal({ open, onOpenChange, onSend }: Props) {
               <Badge
                 variant="outline"
                 className={cn(
-                  "text-[10px] gap-1",
-                  channel === "sms" && "border-blue-300 text-blue-700",
-                  channel === "voice" && "border-emerald-300 text-emerald-700",
+                  "gap-1 text-[10px]",
+                  channel === "sms" && "border-brand-200 bg-brand-50 text-brand-700",
+                  channel === "voice" && "border-amber-200 bg-amber-50 text-amber-800",
                 )}
               >
                 {channel === "voice" ? (
@@ -301,6 +314,13 @@ export function TriggerModal({ open, onOpenChange, onSend }: Props) {
             )}
           </div>
 
+          {isRecording && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50/80 px-2.5 py-2 text-[11px] leading-relaxed text-amber-900">
+              Listening live. Speech will transcribe into the message field until
+              you stop recording or start typing.
+            </div>
+          )}
+
           {!speechSupported && (
             <div className="text-[11px] text-neutral-500 flex items-start gap-1.5">
               <MicOff className="h-3 w-3 mt-0.5 shrink-0" />
@@ -326,11 +346,11 @@ export function TriggerModal({ open, onOpenChange, onSend }: Props) {
           </div>
         </section>
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 border-t border-rule pt-3">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
           >
             Cancel
           </Button>

@@ -24,9 +24,16 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         ...state,
         phase: "ingesting",
         startedAt: performance.now(),
-        context: { ...state.context, trigger: action.trigger, skillResults: {} },
+        context: {
+          trigger: action.trigger,
+          skillResults: {},
+        },
         auditLog: [],
         completedSkillIds: [],
+        activeSkillId: undefined,
+        awaitingConfirmFor: undefined,
+        workflowId: undefined,
+        workflowName: undefined,
         conversationMessages: [
           {
             id: `msg_${Date.now()}`,

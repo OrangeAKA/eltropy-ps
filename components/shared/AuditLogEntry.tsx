@@ -20,12 +20,11 @@ const LEVEL_BG: Record<AuditLogEntryType["level"], string> = {
   ERROR: "bg-rose-50",
 };
 
-// Left rail color, gives each line a quick scannable severity cue.
-const LEVEL_RAIL: Record<AuditLogEntryType["level"], string> = {
-  INFO: "border-l-slate-300",
-  DEBUG: "border-l-neutral-200",
-  WARN: "border-l-amber-400",
-  ERROR: "border-l-rose-500",
+const LEVEL_DOT: Record<AuditLogEntryType["level"], string> = {
+  INFO: "bg-slate-400",
+  DEBUG: "bg-neutral-300",
+  WARN: "bg-amber-500",
+  ERROR: "bg-rose-500",
 };
 
 export function AuditLogEntry({ entry }: Props) {
@@ -38,8 +37,7 @@ export function AuditLogEntry({ entry }: Props) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "font-mono text-[11px] leading-snug py-1 pl-2 pr-2 hover:bg-neutral-100 rounded-r border-l-2",
-        LEVEL_RAIL[entry.level],
+        "rounded-lg border border-transparent bg-[color:color-mix(in_oklch,var(--color-surface-card)_90%,white)] px-2.5 py-2 font-mono text-[11px] leading-snug transition-colors duration-[var(--duration-fast)] hover:border-rule hover:bg-white",
       )}
     >
       <div className="flex items-baseline gap-2">
@@ -53,7 +51,8 @@ export function AuditLogEntry({ entry }: Props) {
         >
           {entry.level.padEnd(5)}
         </span>
-        <span className="text-neutral-400 text-[10px]">
+        <span className={cn("mt-px h-1.5 w-1.5 shrink-0 rounded-full", LEVEL_DOT[entry.level])} />
+        <span className="rounded-full bg-neutral-100 px-1.5 py-px text-[10px] text-neutral-500">
           {entry.component}
         </span>
         <span className="text-neutral-700 break-all whitespace-pre-wrap">

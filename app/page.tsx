@@ -29,7 +29,7 @@ export default function Home() {
           pristine={pristine}
         />
 
-        <main className="flex-1 grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] min-h-0">
+        <main className="flex-1 grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] min-h-0 bg-[color:color-mix(in_oklch,var(--color-surface-page)_88%,white)]">
           <MissionControlPane state={state} />
           <CopilotPane
             state={state}
@@ -42,17 +42,21 @@ export default function Home() {
       </div>
 
       {/* Mobile / small viewport fallback */}
-      <div className="lg:hidden flex-1 flex flex-col items-center justify-center p-6 text-center bg-neutral-50">
-        <div className="max-w-md">
-          <h1 className="text-lg font-semibold mb-2">
+      <div className="lg:hidden flex-1 flex flex-col items-center justify-center p-6 text-center bg-[color:color-mix(in_oklch,var(--color-brand-50)_54%,white)]">
+        <div className="max-w-md rounded-2xl border border-rule bg-[color:color-mix(in_oklch,var(--color-surface-card)_88%,white)] px-5 py-6 shadow-[0_1px_0_rgba(255,255,255,0.7)]">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-neutral-500 mb-2">
+            Desktop Surface
+          </p>
+          <h1 className="font-serif text-xl font-medium tracking-[-0.02em] mb-2">
             Eltropy Mission Control
           </h1>
-          <p className="text-sm text-neutral-600 mb-4">
+          <p className="text-sm text-neutral-600 leading-relaxed mb-4">
             This prototype is designed for desktop viewing. The split-screen
             Mission Control + Copilot layout requires at least 1024px of width.
           </p>
-          <p className="text-xs text-neutral-500">
-            Please open this URL on a laptop or larger display.
+          <p className="text-xs text-neutral-500 leading-relaxed">
+            Open this URL on a laptop or external display to review the full
+            workflow, audit log, and officer approval surfaces together.
           </p>
         </div>
       </div>

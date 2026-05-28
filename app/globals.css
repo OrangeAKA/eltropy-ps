@@ -7,6 +7,21 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-instant: 140ms;
+  --duration-fast: 220ms;
+  --duration-medium: 320ms;
+  --duration-slow: 560ms;
 
   /* Brand palette in OKLCH. Hue 195 (teal). Chroma drops as lightness moves
      toward extremes; high chroma at 95% L looks garish (Impeccable rule).
@@ -157,6 +172,11 @@
     @apply bg-background text-foreground font-sans;
     font-feature-settings: "cv11", "ss01", "ss03";
     text-rendering: optimizeLegibility;
+    background-image:
+      linear-gradient(180deg, color-mix(in oklch, var(--color-brand-50) 34%, transparent), transparent 18rem),
+      linear-gradient(90deg, color-mix(in oklch, var(--color-rule) 88%, transparent) 1px, transparent 1px);
+    background-position: 0 0, 0 0;
+    background-size: auto, 100% 100%;
   }
   html {
     @apply font-sans;
@@ -167,9 +187,24 @@
   .font-mono, code, pre {
     font-feature-settings: "calt", "liga" 0;
   }
+  ::selection {
+    background: color-mix(in oklch, var(--color-brand-200) 82%, white);
+    color: var(--foreground);
+  }
 }
 
 @keyframes indeterminate {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

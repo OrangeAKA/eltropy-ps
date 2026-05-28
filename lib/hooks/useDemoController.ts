@@ -27,6 +27,7 @@ export function useDemoController(): {
 } {
   const [state, dispatch] = useReducer(demoReducer, initialDemoState);
   const confirmResolverRef = useRef<ConfirmResolver | null>(null);
+  const startedAtRef = useRef<number | null>(null);
 
   const sendTrigger = useCallback(
     (
@@ -38,6 +39,7 @@ export function useDemoController(): {
         receivedAt: new Date().toISOString(),
       };
       const startedAt = performance.now();
+      startedAtRef.current = startedAt;
       dispatch({ type: "TRIGGER_RECEIVED", trigger });
 
       handleTrigger(
@@ -122,10 +124,13 @@ export function useDemoController(): {
   );
 
   const confirmOffer = useCallback(() => {
+    const elapsedMs = startedAtRef.current
+      ? Math.round(performance.now() - startedAtRef.current)
+      : 0;
     const log = {
       id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       timestamp: new Date().toISOString(),
-      elapsedMs: 0,
+      elapsedMs,
       level: "INFO" as const,
       component: "human.confirm",
       message: "human.confirm() — officer approved offer dispatch",
@@ -144,6 +149,7 @@ export function useDemoController(): {
   const reset = useCallback(() => {
     confirmResolverRef.current?.reject();
     confirmResolverRef.current = null;
+    startedAtRef.current = null;
     dispatch({ type: "RESET" });
   }, []);
 

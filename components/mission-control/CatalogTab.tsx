@@ -20,13 +20,24 @@ export function CatalogTab() {
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-4 space-y-5">
+      <div className="p-4 space-y-6">
+        <section className="space-y-2">
+          <p className="max-w-[58ch] text-[12px] leading-relaxed text-neutral-600">
+            Skills are grouped by what is already installed versus what will
+            enter the Agent Exchange next. Open any listing to inspect
+            integrations, schema shape, and regulatory tags before it enters a
+            workflow.
+          </p>
+        </section>
+
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-600">
               Installed skills · Eltropy-authored
             </h3>
-            <span className="text-xs text-neutral-500">{installed.length}</span>
+            <span className="rounded-full border border-rule px-2 py-0.5 text-[10px] font-mono text-neutral-500">
+              {installed.length}
+            </span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
             {installed.map((s) => (
@@ -37,13 +48,17 @@ export function CatalogTab() {
 
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-600">
               Agent Exchange · Coming soon
             </h3>
-            <span className="text-xs text-neutral-500">{marketplace.length}</span>
+            <span className="rounded-full border border-rule px-2 py-0.5 text-[10px] font-mono text-neutral-500">
+              {marketplace.length}
+            </span>
           </div>
-          <p className="text-[11px] text-neutral-500 mb-2">
-            Skills published by fintech partners on Eltropy's harness. Subscribe per-execution; 20% take-rate.
+          <p className="mb-2 max-w-[58ch] text-[11px] leading-relaxed text-neutral-500">
+            Skills published by fintech partners on Eltropy&apos;s harness.
+            Subscribe per execution with Eltropy maintaining the policy,
+            identity, and audit boundary.
           </p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
             {marketplace.map((s) => (

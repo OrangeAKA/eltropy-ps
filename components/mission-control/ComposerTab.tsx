@@ -51,11 +51,13 @@ export function ComposerTab({
               {workflow.id}
             </span>
           </div>
-          <p className="text-xs text-neutral-600 leading-snug">
+          <p className="max-w-[62ch] text-xs text-neutral-600 leading-relaxed">
             {workflow.description}
           </p>
           <div className="flex flex-wrap items-center gap-1 mt-2">
-            <span className="text-[10px] text-neutral-500">Triggers on</span>
+            <span className="text-[10px] uppercase tracking-[0.12em] text-neutral-500">
+              Triggers on
+            </span>
             {workflow.triggerIntents.map((i) => (
               <Badge key={i} variant="secondary" className="font-mono tabular-nums text-[10px]">
                 {i}
@@ -130,11 +132,11 @@ function StatusStrip({
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="mb-3 rounded-md border border-brand-200 bg-brand-50/70 overflow-hidden"
+      className="mb-3 overflow-hidden rounded-md border border-brand-200 bg-brand-50/70"
     >
       <div className="px-3 py-2 flex items-center gap-2">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-500 opacity-60" />
+          <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-500 opacity-45" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
         </span>
         <span className="text-xs font-semibold text-brand-900">
@@ -146,10 +148,10 @@ function StatusStrip({
       </div>
       <div className="h-1 bg-brand-100">
         <motion.div
-          className="h-full bg-gradient-to-r from-brand-500 to-brand-600"
+          className="h-full bg-brand-600"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
         />
       </div>
     </motion.div>
@@ -189,11 +191,11 @@ function WorkflowNode({
   return (
     <Card
       className={cn(
-        "p-3 transition relative overflow-hidden gap-1",
-        state === "running" &&
-          "border-brand-500 shadow-[0_0_0_4px_rgba(14,124,123,0.18),0_8px_28px_rgba(14,124,123,0.15)] scale-[1.015]",
-        state === "completed" && "border-emerald-500 bg-emerald-50/30",
-        state === "idle" && "bg-neutral-50/50",
+        "relative gap-1 overflow-hidden p-3",
+        state === "running" && "border-brand-400 bg-brand-50/75",
+        state === "completed" && "border-brand-300 bg-brand-50/50",
+        state === "idle" &&
+          "bg-[color:color-mix(in_oklch,var(--color-surface-card)_72%,var(--color-brand-50))]",
       )}
     >
       <div className="flex items-center gap-2 mb-1">
@@ -201,7 +203,7 @@ function WorkflowNode({
           className={cn(
             "h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
             state === "completed"
-              ? "bg-emerald-100 text-emerald-700"
+              ? "bg-brand-100 text-brand-700"
               : state === "running"
                 ? "bg-brand-100 text-brand-700 ring-2 ring-brand-500/40"
                 : "bg-neutral-200 text-neutral-600",
@@ -258,7 +260,7 @@ function WorkflowNode({
       {/* Indeterminate progress bar for running state */}
       {state === "running" && (
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-100 overflow-hidden">
-          <div className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-brand-500 to-transparent animate-[indeterminate_1.4s_ease-in-out_infinite]" />
+          <div className="absolute inset-y-0 w-1/3 bg-brand-500/70 motion-safe:animate-[indeterminate_1.4s_ease-in-out_infinite]" />
         </div>
       )}
     </Card>

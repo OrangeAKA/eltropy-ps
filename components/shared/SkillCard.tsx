@@ -26,10 +26,10 @@ const PUBLISHER_LABEL: Record<Skill["publisher"], string> = {
 
 const PUBLISHER_COLOR: Record<Skill["publisher"], string> = {
   eltropy: "bg-brand-50 text-brand-700 border-brand-200",
-  akuvo: "bg-purple-50 text-purple-700 border-purple-200",
-  meridianlink: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  velera: "bg-amber-50 text-amber-700 border-amber-200",
-  verafin: "bg-rose-50 text-rose-700 border-rose-200",
+  akuvo: "bg-[color:color-mix(in_oklch,var(--color-brand-50)_40%,white)] text-neutral-700 border-rule-strong",
+  meridianlink: "bg-[color:color-mix(in_oklch,var(--color-brand-50)_56%,white)] text-neutral-700 border-rule-strong",
+  velera: "bg-[color:color-mix(in_oklch,var(--color-brand-50)_48%,white)] text-neutral-700 border-rule-strong",
+  verafin: "bg-[color:color-mix(in_oklch,var(--color-brand-50)_36%,white)] text-neutral-700 border-rule-strong",
 };
 
 export function SkillCard({
@@ -44,25 +44,25 @@ export function SkillCard({
     <Card
       onClick={onClick}
       className={cn(
-        "p-4 transition cursor-pointer relative overflow-hidden gap-2",
-        onClick && "hover:shadow-md hover:border-neutral-400",
+        "relative cursor-pointer overflow-hidden gap-2 p-4",
+        onClick &&
+          "hover:border-brand-300 hover:bg-[color:color-mix(in_oklch,var(--color-brand-50)_40%,white)]",
         variant === "compact" && "p-3",
-        state === "running" &&
-          "border-brand-500 shadow-[0_0_0_4px_rgba(14,124,123,0.18)]",
-        state === "completed" && "border-emerald-500",
-        state === "blocked" && "border-amber-500",
-        isPlaceholder && "border-dashed bg-neutral-50",
+        state === "running" && "border-brand-400 bg-brand-50/80",
+        state === "completed" && "border-brand-300 bg-brand-50/55",
+        state === "blocked" && "border-amber-300 bg-amber-50/60",
+        isPlaceholder && "border-dashed bg-[color:color-mix(in_oklch,var(--color-brand-50)_30%,white)]",
       )}
     >
       {/* Running pulse overlay */}
       <AnimatePresence>
         {state === "running" && (
           <motion.div
-            className="absolute inset-0 bg-brand-500/5 pointer-events-none"
+            className="pointer-events-none absolute inset-0 bg-brand-500/5"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0] }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, repeat: Infinity }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
           />
         )}
       </AnimatePresence>
@@ -109,7 +109,7 @@ export function SkillCard({
       </div>
 
       {variant !== "compact" && (
-        <p className="text-xs text-neutral-600 leading-snug line-clamp-2 mb-2">
+        <p className="mb-2 text-xs leading-snug text-neutral-600 line-clamp-2">
           {skill.description}
         </p>
       )}
@@ -123,7 +123,7 @@ export function SkillCard({
         </Badge>
         <div className="flex items-center gap-1.5">
           {isPlaceholder ? (
-            <span className="text-[10px] text-neutral-500 italic">
+            <span className="text-[10px] italic text-neutral-500">
               Coming v1.1
             </span>
           ) : (

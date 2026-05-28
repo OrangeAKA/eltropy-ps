@@ -54,30 +54,30 @@ function ArchitectureGlyph({ className }: { className?: string }) {
 export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props) {
   const [archOpen, setArchOpen] = useState(false);
   return (
-    <header className="border-b border-neutral-200 bg-white px-4 py-2.5 flex items-center gap-4 shrink-0">
-      <div className="flex items-center gap-2.5 shrink-0">
-        <div className="h-8 w-8 rounded-md bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center shadow-[0_2px_8px_rgba(14,124,123,0.35)]">
-          <EltropyMark className="h-[18px] w-[18px] text-white" />
+    <header className="border-b border-rule-strong bg-[color:color-mix(in_oklch,var(--color-surface-card)_92%,white)] px-4 py-3 flex items-center gap-4 shrink-0">
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-brand-200 bg-brand-50/90">
+          <EltropyMark className="h-[18px] w-[18px] text-brand-700" />
         </div>
         <div className="leading-tight">
-          <div className="font-serif text-[18px] font-medium tracking-[-0.01em]">
+          <div className="font-serif text-[18px] font-medium tracking-[-0.015em] text-neutral-900">
             Mission Control
           </div>
-          <div className="text-[10px] text-neutral-500 tracking-wide uppercase">
+          <div className="text-[10px] text-neutral-500 tracking-[0.16em] uppercase">
             Eltropy &middot; Cyprus Credit Union
           </div>
         </div>
       </div>
 
       <div className="hidden lg:flex items-center gap-2 ml-6">
-        <span className="text-[10px] uppercase tracking-wide text-neutral-400 font-medium">
+        <span className="text-[10px] uppercase tracking-[0.16em] text-neutral-400 font-medium">
           Integrations
         </span>
         <div className="flex items-center gap-1.5">
           {SYSTEMS.map((s) => (
             <div
               key={s.name}
-              className="flex items-center gap-1.5 pl-1 pr-2 py-0.5 rounded-full bg-neutral-50 border border-neutral-200/70"
+              className="flex items-center gap-1.5 rounded-full border border-rule bg-[color:color-mix(in_oklch,var(--color-brand-50)_48%,white)] pl-1 pr-2 py-0.5 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-quart)] hover:border-brand-200"
               title={`${s.name} · connected`}
             >
               <VendorMonogram
@@ -88,7 +88,7 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
                 {s.name}
               </span>
               <span
-                className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                className="h-1.5 w-1.5 rounded-full bg-brand-500"
                 aria-label="connected"
               />
             </div>
@@ -118,8 +118,8 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
           Reset
         </Button>
         {pristine && (
-          <span className="hidden xl:inline text-[11px] text-brand-700 font-medium animate-pulse">
-            Start here &rarr;
+          <span className="hidden xl:inline rounded-full border border-brand-200 bg-brand-50 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-brand-800">
+            Start with a trigger
           </span>
         )}
         <div className="relative">
@@ -127,18 +127,18 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
             <>
               <span
                 aria-hidden
-                className="pointer-events-none absolute -inset-1 rounded-lg ring-2 ring-brand-400 opacity-60 animate-ping"
+                className="pointer-events-none absolute -inset-1 rounded-lg border border-brand-300/80 motion-safe:animate-pulse"
               />
               <span
                 aria-hidden
-                className="pointer-events-none absolute -inset-0.5 rounded-md ring-2 ring-brand-400/70"
+                className="pointer-events-none absolute -inset-0.5 rounded-md border border-brand-400/60"
               />
             </>
           )}
           <Button
             onClick={onTriggerClick}
             size="sm"
-            className="relative gap-1.5 h-8 bg-brand-600 hover:bg-brand-700 shadow-sm"
+            className="relative h-8 gap-1.5 bg-brand-600 hover:bg-brand-700"
           >
             <Play className="h-3.5 w-3.5" />
             Send trigger

@@ -11,8 +11,8 @@ import type { Member } from "@/data/members";
 type Props = { member?: Member };
 
 const TIER_COLOR: Record<Member["memberTier"], string> = {
-  prime: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  standard: "bg-blue-50 text-blue-700 border-blue-200",
+  prime: "bg-brand-50 text-brand-700 border-brand-200",
+  standard: "bg-[color:color-mix(in_oklch,var(--color-brand-50)_50%,white)] text-neutral-700 border-rule-strong",
   "sub-prime": "bg-amber-50 text-amber-700 border-amber-200",
 };
 
@@ -27,10 +27,10 @@ export function MemberContextCard({ member }: Props) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="p-3 gap-2">
+          <Card className="gap-2 p-3 bg-[color:color-mix(in_oklch,var(--color-surface-card)_86%,white)]">
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10 shrink-0">
-                <AvatarFallback className="bg-blue-100 text-blue-700 text-sm">
+                <AvatarFallback className="bg-brand-50 text-brand-700 text-sm">
                   {member.fullName
                     .split(" ")
                     .map((n) => n[0])
@@ -70,7 +70,7 @@ export function MemberContextCard({ member }: Props) {
                     <Badge
                       key={p.accountId}
                       variant="secondary"
-                      className="text-[9px] px-1.5 py-0 font-mono tabular-nums gap-1"
+                      className="gap-1 px-1.5 py-0 text-[9px] font-mono tabular-nums"
                     >
                       {productIcon(p.type)}
                       {p.type.replace("_", " ")}
