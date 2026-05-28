@@ -5,7 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CatalogTab } from "@/components/mission-control/CatalogTab";
 import { ComposerTab } from "@/components/mission-control/ComposerTab";
 import { RuntimeTab } from "@/components/mission-control/RuntimeTab";
-import { Boxes, Workflow, Terminal } from "lucide-react";
+import {
+  CatalogGlyph,
+  ComposerGlyph,
+  RuntimeGlyph,
+} from "@/components/shared/TabIcons";
 import type { DemoState } from "@/lib/types";
 
 type Props = {
@@ -44,15 +48,15 @@ export function MissionControlPane({ state }: Props) {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 w-full h-8">
             <TabsTrigger value="catalog" className="text-xs gap-1.5">
-              <Boxes className="h-3.5 w-3.5" />
+              <CatalogGlyph className="h-3.5 w-3.5" />
               Catalog
             </TabsTrigger>
             <TabsTrigger value="composer" className="text-xs gap-1.5">
-              <Workflow className="h-3.5 w-3.5" />
+              <ComposerGlyph className="h-3.5 w-3.5" />
               Composer
             </TabsTrigger>
             <TabsTrigger value="runtime" className="text-xs gap-1.5">
-              <Terminal className="h-3.5 w-3.5" />
+              <RuntimeGlyph className="h-3.5 w-3.5" />
               Runtime
               {state.auditLog.length > 0 && (
                 <span className="bg-neutral-200 text-neutral-700 rounded px-1 text-[9px] font-mono">

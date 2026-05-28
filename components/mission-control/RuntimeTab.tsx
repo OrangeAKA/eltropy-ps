@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { AuditLogEntry } from "@/components/shared/AuditLogEntry";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { AuditLogEntry as AuditLogEntryType } from "@/lib/types";
-import { Terminal } from "lucide-react";
+import { RuntimeGlyph } from "@/components/shared/TabIcons";
 
 type Props = {
   log: AuditLogEntryType[];
@@ -26,7 +26,7 @@ export function RuntimeTab({ log }: Props) {
   if (log.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-neutral-400 p-8">
-        <Terminal className="h-8 w-8 mb-2 opacity-50" />
+        <RuntimeGlyph className="h-8 w-8 mb-2 opacity-50" />
         <p className="text-sm">Runtime audit log</p>
         <p className="text-xs mt-1 text-center max-w-xs">
           Streams here when a trigger fires. Every skill execution, guardrail
