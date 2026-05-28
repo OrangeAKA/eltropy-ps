@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2, Lock, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VendorMonogram } from "@/components/shared/VendorMonogram";
 import type { Skill } from "@/data/skills";
 
 type SkillCardProps = {
@@ -83,6 +84,18 @@ export function SkillCard({
           )}
           {isPlaceholder && (
             <Lock className="h-4 w-4 text-neutral-400 shrink-0" />
+          )}
+          {state === "idle" && !isPlaceholder && (
+            <VendorMonogram
+              vendor={skill.publisher}
+              className="h-4 w-4 text-[8px] shrink-0"
+            />
+          )}
+          {state === "idle" && isPlaceholder && (
+            <VendorMonogram
+              vendor={skill.publisher}
+              className="h-4 w-4 text-[8px] shrink-0 opacity-70"
+            />
           )}
           <h3
             className={cn(

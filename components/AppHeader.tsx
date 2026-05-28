@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Play, RotateCcw } from "lucide-react";
 import { EltropyMark } from "@/components/shared/EltropyMark";
+import { VendorMonogram } from "@/components/shared/VendorMonogram";
 
 type Props = {
   onTriggerClick: () => void;
@@ -11,11 +12,15 @@ type Props = {
   pristine?: boolean;
 };
 
-const SYSTEMS = [
-  { name: "Symitar", status: "connected" as const },
-  { name: "MeridianLink", status: "connected" as const },
-  { name: "Velera", status: "connected" as const },
-  { name: "Eltropy Voice", status: "connected" as const },
+const SYSTEMS: Array<{
+  name: string;
+  vendor: "symitar" | "meridianlink" | "velera" | "eltropy";
+  status: "connected";
+}> = [
+  { name: "Symitar", vendor: "symitar", status: "connected" },
+  { name: "MeridianLink", vendor: "meridianlink", status: "connected" },
+  { name: "Velera", vendor: "velera", status: "connected" },
+  { name: "Eltropy Voice", vendor: "eltropy", status: "connected" },
 ];
 
 export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props) {
@@ -39,18 +44,24 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
         <span className="text-[10px] uppercase tracking-wide text-neutral-400 font-medium">
           Integrations
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {SYSTEMS.map((s) => (
             <div
               key={s.name}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-neutral-50 border border-neutral-200/70"
+              className="flex items-center gap-1.5 pl-1 pr-2 py-0.5 rounded-full bg-neutral-50 border border-neutral-200/70"
               title={`${s.name} · connected`}
             >
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-50" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <VendorMonogram
+                vendor={s.vendor}
+                className="h-3.5 w-3.5 text-[8px]"
+              />
+              <span className="text-[10px] text-neutral-700 font-medium">
+                {s.name}
               </span>
-              <span className="text-[10px] text-neutral-600">{s.name}</span>
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                aria-label="connected"
+              />
             </div>
           ))}
         </div>
