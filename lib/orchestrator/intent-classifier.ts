@@ -1,29 +1,88 @@
 // lib/orchestrator/intent-classifier.ts
 //
 // Classifies a free-text message body into a structured intent + entities.
-// Mock implementation uses keyword heuristics. Production swaps in an
-// LLM-backed classifier (Claude Haiku, GPT-4o-mini, etc.) with the same
-// interface.
+//
+// Primary implementation: calls the /api/classify-intent serverless route
+// which uses Claude Haiku 4.5 for real LLM-backed classification.
+//
+// Fallback implementation: deterministic keyword heuristics. Fires when:
+//   - The LLM route returns non-200 (e.g., ANTHROPIC_API_KEY missing)
+//   - The fetch fails (network error, offline dev)
+//   - The model returns malformed output
+//
+// This means the demo never breaks. Production keeps both layers — the
+// fallback is a safety net for outages.
 
 import type { IntentClassification, IntentName, IntentEntities } from "@/lib/types";
 
-export const CLASSIFIER_NAME = "KeywordHeuristicMock-v1";
+export const PRIMARY_CLASSIFIER = "claude-haiku-4-5";
+export const FALLBACK_CLASSIFIER = "KeywordHeuristicMock-v1";
 
-// Production replacement: pass body to LLM with structured output schema.
 export async function classifyIntent(body: string): Promise<IntentClassification> {
-  await wait(160 + Math.random() * 120);
+  // ── 1. Try the LLM-backed route
+  try {
+    const response = await fetch("/api/classify-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body }),
+    });
+
+    if (response.ok) {
+      const data = (await response.json()) as {
+        intent?: string;
+        confidence?: number;
+        entities?: Record<string, unknown>;
+        classifier?: string;
+      };
+      const intent = normalizeIntent(data.intent);
+      return {
+        intent,
+        confidence: typeof data.confidence === "number" ? data.confidence : 0.85,
+        entities: (data.entities ?? {}) as IntentEntities,
+        classifier: data.classifier ?? PRIMARY_CLASSIFIER,
+      };
+    }
+
+    // Non-OK response: log and fall through to keyword
+    console.warn(
+      `[intent-classifier] LLM route returned ${response.status}; falling back to keyword classifier`,
+    );
+  } catch (err) {
+    console.warn(
+      "[intent-classifier] LLM route fetch failed; falling back to keyword classifier:",
+      err,
+    );
+  }
+
+  // ── 2. Fallback: deterministic keyword classifier
+  return keywordClassify(body);
+}
+
+function normalizeIntent(raw?: string): IntentName {
+  const allowed: IntentName[] = [
+    "lending_inquiry",
+    "refinance_inquiry",
+    "card_dispute",
+    "balance_inquiry",
+    "general_handoff",
+  ];
+  if (raw && (allowed as string[]).includes(raw)) return raw as IntentName;
+  return "general_handoff";
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Fallback: deterministic keyword classifier
+// ────────────────────────────────────────────────────────────────────────────
+
+async function keywordClassify(body: string): Promise<IntentClassification> {
+  await wait(120 + Math.random() * 80);
 
   const lower = body.toLowerCase();
   const intent = detectIntent(lower);
   const entities = extractEntities(lower);
   const confidence = computeConfidence(lower, intent);
 
-  return {
-    intent,
-    entities,
-    confidence,
-    classifier: CLASSIFIER_NAME,
-  };
+  return { intent, entities, confidence, classifier: FALLBACK_CLASSIFIER };
 }
 
 function detectIntent(body: string): IntentName {
@@ -51,7 +110,6 @@ function detectIntent(body: string): IntentName {
 function extractEntities(body: string): IntentEntities {
   const entities: IntentEntities = {};
 
-  // Dollar amount: $25K, $25,000, twenty-five thousand
   const dollarMatch = body.match(/\$?\s*(\d{1,3}(?:,\d{3})*|\d+)\s*(k|grand|thousand)?/i);
   if (dollarMatch) {
     let amount = parseInt(dollarMatch[1].replace(/,/g, ""), 10);
@@ -63,7 +121,6 @@ function extractEntities(body: string): IntentEntities {
     }
   }
 
-  // Vehicle (very rough): year + make
   const vehicleMatch = body.match(
     /(20\d{2})\s+(honda|toyota|ford|chevy|chevrolet|nissan|hyundai|kia|mazda|subaru|jeep)\s+([a-z\-]+)/i,
   );
@@ -71,7 +128,6 @@ function extractEntities(body: string): IntentEntities {
     entities.vehicle = `${vehicleMatch[1]} ${vehicleMatch[2]} ${vehicleMatch[3]}`;
   }
 
-  // Product guess from keywords
   if (/auto|car|truck|suv|honda|toyota|ford/i.test(body)) {
     entities.product = "auto_loan";
   } else if (/mortgage|home/i.test(body)) {
@@ -84,7 +140,6 @@ function extractEntities(body: string): IntentEntities {
 }
 
 function computeConfidence(body: string, intent: IntentName): number {
-  // Mock heuristic: more keyword matches → higher confidence
   const hits = body.match(/(loan|finance|refi|refinance|auto|mortgage|dispute|balance)/gi);
   const base = hits ? Math.min(0.99, 0.7 + hits.length * 0.07) : 0.55;
   if (intent === "general_handoff") return 0.42;
