@@ -21,8 +21,8 @@ export function ConversationThread({ messages, channel }: Props) {
   if (messages.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-8">
-        <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center mb-3">
-          <MessageSquare className="h-5 w-5 text-blue-600" />
+        <div className="h-12 w-12 rounded-full bg-brand-50 flex items-center justify-center mb-3">
+          <MessageSquare className="h-5 w-5 text-brand-600" />
         </div>
         <p className="text-sm font-medium text-neutral-800 mb-1">
           Waiting for an inbound member

@@ -21,7 +21,7 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
   return (
     <header className="border-b border-neutral-200 bg-white px-4 py-2.5 flex items-center gap-4 shrink-0">
       <div className="flex items-center gap-2.5 shrink-0">
-        <div className="h-7 w-7 rounded-md bg-blue-600 flex items-center justify-center shadow-sm">
+        <div className="h-7 w-7 rounded-md bg-brand-600 flex items-center justify-center shadow-sm">
           <Zap className="h-4 w-4 text-white" />
         </div>
         <div className="leading-tight">
@@ -67,7 +67,7 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
           Reset
         </Button>
         {pristine && (
-          <span className="hidden xl:inline text-[11px] text-blue-700 font-medium animate-pulse">
+          <span className="hidden xl:inline text-[11px] text-brand-700 font-medium animate-pulse">
             Start here &rarr;
           </span>
         )}
@@ -76,18 +76,18 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
             <>
               <span
                 aria-hidden
-                className="pointer-events-none absolute -inset-1 rounded-lg ring-2 ring-blue-400 opacity-60 animate-ping"
+                className="pointer-events-none absolute -inset-1 rounded-lg ring-2 ring-brand-400 opacity-60 animate-ping"
               />
               <span
                 aria-hidden
-                className="pointer-events-none absolute -inset-0.5 rounded-md ring-2 ring-blue-400/70"
+                className="pointer-events-none absolute -inset-0.5 rounded-md ring-2 ring-brand-400/70"
               />
             </>
           )}
           <Button
             onClick={onTriggerClick}
             size="sm"
-            className="relative gap-1.5 h-8 bg-blue-600 hover:bg-blue-700 shadow-sm"
+            className="relative gap-1.5 h-8 bg-brand-600 hover:bg-brand-700 shadow-sm"
           >
             <Play className="h-3.5 w-3.5" />
             Send trigger

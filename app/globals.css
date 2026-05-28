@@ -7,6 +7,24 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Brand palette: Eltropy-leaning teal. Used for primary actions, active
+     states, focus rings, and product-identity surfaces. */
+  --color-brand-50: #e6f4f4;
+  --color-brand-100: #c2e3e2;
+  --color-brand-200: #95cdcc;
+  --color-brand-300: #5fb5b3;
+  --color-brand-400: #2fa19f;
+  --color-brand-500: #1aa09e;
+  --color-brand-600: #0e7c7b;
+  --color-brand-700: #0a6967;
+  --color-brand-800: #084f4e;
+  --color-brand-900: #053230;
+
+  /* Page surface: a cool tinted off-white that harmonizes with the teal
+     accent. Cards and panes stay pure white for a subtle elevation cue. */
+  --color-surface-page: #f7f8fa;
+
   --font-sans:
     var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;

@@ -200,7 +200,7 @@ export function TriggerModal({ open, onOpenChange, onSend }: Props) {
                 className={cn(
                   "text-left p-2 border rounded-md transition",
                   selectedMemberId === m.id
-                    ? "border-blue-500 bg-blue-50/50"
+                    ? "border-brand-500 bg-brand-50/60"
                     : "border-neutral-200 hover:border-neutral-400",
                 )}
               >

@@ -54,7 +54,7 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
     <div className="flex flex-col h-full bg-neutral-50/40">
       <div className="px-3 py-2 border-b border-neutral-200 bg-white">
         <div className="flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+          <Sparkles className="h-3.5 w-3.5 text-brand-600" />
           <span className="text-xs font-semibold">Copilot</span>
           <span className="ml-auto text-[10px] text-neutral-500">
             {PHASE_LABEL[state.phase]}
@@ -198,10 +198,10 @@ function ActiveSkillCard({ skillId }: { skillId: string }) {
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <Card className="p-2.5 bg-blue-50/50 border-blue-200 gap-1">
+      <Card className="p-2.5 bg-brand-50/60 border-brand-200 gap-1">
         <div className="flex items-center gap-2">
-          <Loader2 className="h-3.5 w-3.5 text-blue-600 animate-spin" />
-          <span className="text-xs text-blue-900 font-medium">{label}…</span>
+          <Loader2 className="h-3.5 w-3.5 text-brand-600 animate-spin" />
+          <span className="text-xs text-brand-900 font-medium">{label}…</span>
         </div>
       </Card>
     </motion.div>
@@ -242,9 +242,9 @@ function OfferCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="p-3 border-blue-300 shadow-md gap-2">
+      <Card className="p-3 border-brand-300 shadow-md gap-2">
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="h-4 w-4 text-blue-600" />
+          <Sparkles className="h-4 w-4 text-brand-600" />
           <span className="font-medium text-sm">Pre-qualified offer</span>
           <Badge className="ml-auto bg-emerald-100 text-emerald-700 text-[10px]">
             Approved
@@ -270,7 +270,7 @@ function OfferCard({
           {offer.rationale}
         </div>
 
-        <div className="bg-blue-50/50 border border-blue-200 rounded p-2 text-[10px] leading-snug text-blue-900 mt-1">
+        <div className="bg-brand-50/60 border border-brand-200 rounded p-2 text-[10px] leading-snug text-brand-900 mt-1">
           <div className="font-medium mb-0.5">Truth-in-Lending</div>
           {offer.disclosure}
         </div>
@@ -316,7 +316,7 @@ function OfferStat({
       <div
         className={cn(
           "font-mono font-medium",
-          highlight && "text-blue-700",
+          highlight && "text-brand-700",
         )}
       >
         {value}
@@ -423,7 +423,7 @@ function AccountSummaryCard({ summary }: { summary: AccountSummary }) {
     >
       <Card className="p-2.5 bg-white gap-2">
         <div className="flex items-center gap-1.5 mb-1">
-          <Wallet className="h-3 w-3 text-blue-700" />
+          <Wallet className="h-3 w-3 text-brand-700" />
           <span className="text-[10px] uppercase tracking-wide text-neutral-600 font-medium">
             Account snapshot
           </span>

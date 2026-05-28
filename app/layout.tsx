@@ -30,7 +30,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-neutral-50 text-neutral-900 font-sans">
+      <body className="min-h-full flex flex-col bg-surface-page text-neutral-900 font-sans">
         {children}
       </body>
     </html>

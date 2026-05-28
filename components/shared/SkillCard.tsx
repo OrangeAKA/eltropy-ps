@@ -24,7 +24,7 @@ const PUBLISHER_LABEL: Record<Skill["publisher"], string> = {
 };
 
 const PUBLISHER_COLOR: Record<Skill["publisher"], string> = {
-  eltropy: "bg-blue-50 text-blue-700 border-blue-200",
+  eltropy: "bg-brand-50 text-brand-700 border-brand-200",
   akuvo: "bg-purple-50 text-purple-700 border-purple-200",
   meridianlink: "bg-emerald-50 text-emerald-700 border-emerald-200",
   velera: "bg-amber-50 text-amber-700 border-amber-200",
@@ -47,7 +47,7 @@ export function SkillCard({
         onClick && "hover:shadow-md hover:border-neutral-400",
         variant === "compact" && "p-3",
         state === "running" &&
-          "border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.15)]",
+          "border-brand-500 shadow-[0_0_0_4px_rgba(14,124,123,0.18)]",
         state === "completed" && "border-emerald-500",
         state === "blocked" && "border-amber-500",
         isPlaceholder && "border-dashed bg-neutral-50",
@@ -57,7 +57,7 @@ export function SkillCard({
       <AnimatePresence>
         {state === "running" && (
           <motion.div
-            className="absolute inset-0 bg-blue-500/5 pointer-events-none"
+            className="absolute inset-0 bg-brand-500/5 pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0] }}
             exit={{ opacity: 0 }}
@@ -69,7 +69,7 @@ export function SkillCard({
       <div className="flex items-start justify-between gap-2 mb-1">
         <div className="flex items-center gap-2 min-w-0">
           {state === "running" && (
-            <Loader2 className="h-4 w-4 text-blue-600 animate-spin shrink-0" />
+            <Loader2 className="h-4 w-4 text-brand-600 animate-spin shrink-0" />
           )}
           {state === "completed" && (
             <motion.span

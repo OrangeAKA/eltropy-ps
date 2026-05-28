@@ -112,7 +112,7 @@ function WorkflowNode({
       className={cn(
         "p-3 transition relative overflow-hidden gap-1",
         state === "running" &&
-          "border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.15)]",
+          "border-brand-500 shadow-[0_0_0_4px_rgba(14,124,123,0.18),0_8px_28px_rgba(14,124,123,0.15)] scale-[1.015]",
         state === "completed" && "border-emerald-500 bg-emerald-50/30",
         state === "idle" && "bg-neutral-50/50",
       )}
@@ -124,7 +124,7 @@ function WorkflowNode({
             state === "completed"
               ? "bg-emerald-100 text-emerald-700"
               : state === "running"
-                ? "bg-blue-100 text-blue-700"
+                ? "bg-brand-100 text-brand-700 ring-2 ring-brand-500/40"
                 : "bg-neutral-200 text-neutral-600",
           )}
         >

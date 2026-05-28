@@ -39,7 +39,7 @@ export function SkillDetailModal({ skill, open, onOpenChange }: Props) {
             {isPlaceholder ? (
               <Lock className="h-4 w-4 text-neutral-500" />
             ) : (
-              <Zap className="h-4 w-4 text-blue-600" />
+              <Zap className="h-4 w-4 text-brand-600" />
             )}
             <DialogTitle className="text-lg">{skill.name}</DialogTitle>
           </div>
@@ -117,7 +117,7 @@ export function SkillDetailModal({ skill, open, onOpenChange }: Props) {
                   key={i.name}
                   className="font-mono text-[11px] text-neutral-700"
                 >
-                  <span className="text-blue-700">{i.name}</span>
+                  <span className="text-brand-700">{i.name}</span>
                   <span className="text-neutral-400">: </span>
                   <span className="text-neutral-700">{i.type}</span>
                   {i.required && (
