@@ -28,6 +28,9 @@
   --font-sans:
     var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif:
+    var(--font-serif), ui-serif, "Charter", Georgia, Cambria, "Times New Roman",
+    Times, serif;
   --font-mono:
     var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     monospace;

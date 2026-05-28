@@ -43,7 +43,7 @@ export function MemberContextCard({ member }: Props) {
                     <div className="font-medium text-sm leading-tight truncate">
                       {member.fullName}
                     </div>
-                    <div className="text-[11px] text-neutral-500 font-mono">
+                    <div className="text-[11px] text-neutral-500 font-mono tabular-nums">
                       ID {member.id} · {member.address.city}, {member.address.state}
                     </div>
                   </div>
@@ -56,13 +56,13 @@ export function MemberContextCard({ member }: Props) {
                 </div>
                 <div className="grid grid-cols-3 gap-2 mt-2 text-[11px]">
                   <Stat label="Tenure">
-                    <span className="font-mono">{member.tenureYears.toFixed(1)}y</span>
+                    <span className="font-mono tabular-nums">{member.tenureYears.toFixed(1)}y</span>
                   </Stat>
                   <Stat label="FICO">
-                    <span className="font-mono font-medium">{member.fico}</span>
+                    <span className="font-mono tabular-nums font-medium">{member.fico}</span>
                   </Stat>
                   <Stat label="Products">
-                    <span className="font-mono">{member.products.length}</span>
+                    <span className="font-mono tabular-nums">{member.products.length}</span>
                   </Stat>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-2">
@@ -70,7 +70,7 @@ export function MemberContextCard({ member }: Props) {
                     <Badge
                       key={p.accountId}
                       variant="secondary"
-                      className="text-[9px] px-1.5 py-0 font-mono gap-1"
+                      className="text-[9px] px-1.5 py-0 font-mono tabular-nums gap-1"
                     >
                       {productIcon(p.type)}
                       {p.type.replace("_", " ")}

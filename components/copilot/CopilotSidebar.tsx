@@ -82,7 +82,7 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
                     </span>
                     <Badge
                       variant="outline"
-                      className="ml-auto text-[9px] font-mono"
+                      className="ml-auto text-[9px] font-mono tabular-nums"
                     >
                       {(intent.confidence * 100).toFixed(0)}% conf.
                     </Badge>
@@ -93,7 +93,7 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
                   {Object.keys(intent.entities).length > 0 && (
                     <div className="text-[11px] text-neutral-600 mt-0.5">
                       {Object.entries(intent.entities).map(([k, v]) => (
-                        <div key={k} className="font-mono">
+                        <div key={k} className="font-mono tabular-nums">
                           <span className="text-neutral-500">{k}:</span>{" "}
                           <span>{String(v)}</span>
                         </div>
@@ -315,7 +315,7 @@ function OfferStat({
       </div>
       <div
         className={cn(
-          "font-mono font-medium",
+          "font-mono tabular-nums font-medium",
           highlight && "text-brand-700",
         )}
       >
@@ -354,7 +354,7 @@ function DisputeReviewCard({
           <div className="text-[11px] text-neutral-600 mt-0.5">
             {dispute.transactionDate} &middot; card ending {dispute.cardLast4}
           </div>
-          <div className="font-mono text-base font-semibold text-amber-900 mt-1">
+          <div className="font-mono tabular-nums text-base font-semibold text-amber-900 mt-1">
             ${dispute.amount.toFixed(2)}
           </div>
         </div>
@@ -366,7 +366,7 @@ function DisputeReviewCard({
               <div className="text-neutral-500 uppercase tracking-wide text-[9px]">
                 Reg E window
               </div>
-              <div className="font-mono text-neutral-800">
+              <div className="font-mono tabular-nums text-neutral-800">
                 {dispute.regEDaysRemaining} business days
               </div>
             </div>
@@ -377,7 +377,7 @@ function DisputeReviewCard({
               <div className="text-neutral-500 uppercase tracking-wide text-[9px]">
                 Liability cap
               </div>
-              <div className="font-mono text-neutral-800">
+              <div className="font-mono tabular-nums text-neutral-800">
                 ${dispute.liabilityCapUsd}
               </div>
             </div>
@@ -438,11 +438,11 @@ function AccountSummaryCard({ summary }: { summary: AccountSummary }) {
                 <div className="font-medium text-neutral-800 truncate">
                   {a.type.replace("_", " ")}
                 </div>
-                <div className="text-[10px] text-neutral-500 font-mono">
+                <div className="text-[10px] text-neutral-500 font-mono tabular-nums">
                   {a.accountId}
                 </div>
               </div>
-              <div className="font-mono text-sm font-medium text-neutral-900 shrink-0">
+              <div className="font-mono tabular-nums text-sm font-medium text-neutral-900 shrink-0">
                 ${a.balance.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -463,7 +463,7 @@ function AccountSummaryCard({ summary }: { summary: AccountSummary }) {
                   className="flex items-center justify-between text-[10px] text-neutral-700"
                 >
                   <span className="truncate mr-2">{t.description}</span>
-                  <span className="font-mono shrink-0 text-red-700">
+                  <span className="font-mono tabular-nums shrink-0 text-red-700">
                     -${Math.abs(t.amount).toFixed(2)}
                   </span>
                 </div>
@@ -508,13 +508,13 @@ function CompletionCard({
             <div className="text-emerald-700/70 uppercase tracking-wide">
               Audit events
             </div>
-            <div className="font-mono text-emerald-900">{totalLogs}</div>
+            <div className="font-mono tabular-nums text-emerald-900">{totalLogs}</div>
           </div>
           <div>
             <div className="text-emerald-700/70 uppercase tracking-wide">
               Total time
             </div>
-            <div className="font-mono text-emerald-900">
+            <div className="font-mono tabular-nums text-emerald-900">
               {(elapsedMs / 1000).toFixed(1)}s
             </div>
           </div>
@@ -557,13 +557,13 @@ function DeclinedCard({
             <div className="text-amber-700/80 uppercase tracking-wide">
               Audit events
             </div>
-            <div className="font-mono text-amber-900">{totalLogs}</div>
+            <div className="font-mono tabular-nums text-amber-900">{totalLogs}</div>
           </div>
           <div>
             <div className="text-amber-700/80 uppercase tracking-wide">
               Total time
             </div>
-            <div className="font-mono text-amber-900">
+            <div className="font-mono tabular-nums text-amber-900">
               {(elapsedMs / 1000).toFixed(1)}s
             </div>
           </div>
@@ -606,13 +606,13 @@ function DisputeCompletionCard({
             <div className="text-emerald-700/70 uppercase tracking-wide">
               Audit events
             </div>
-            <div className="font-mono text-emerald-900">{totalLogs}</div>
+            <div className="font-mono tabular-nums text-emerald-900">{totalLogs}</div>
           </div>
           <div>
             <div className="text-emerald-700/70 uppercase tracking-wide">
               Total time
             </div>
-            <div className="font-mono text-emerald-900">
+            <div className="font-mono tabular-nums text-emerald-900">
               {(elapsedMs / 1000).toFixed(1)}s
             </div>
           </div>
@@ -652,13 +652,13 @@ function BalanceCompletionCard({
             <div className="text-emerald-700/70 uppercase tracking-wide">
               Audit events
             </div>
-            <div className="font-mono text-emerald-900">{totalLogs}</div>
+            <div className="font-mono tabular-nums text-emerald-900">{totalLogs}</div>
           </div>
           <div>
             <div className="text-emerald-700/70 uppercase tracking-wide">
               Total time
             </div>
-            <div className="font-mono text-emerald-900">
+            <div className="font-mono tabular-nums text-emerald-900">
               {(elapsedMs / 1000).toFixed(1)}s
             </div>
           </div>

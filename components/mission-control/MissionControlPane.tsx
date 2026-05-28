@@ -40,8 +40,10 @@ export function MissionControlPane({ state }: Props) {
     <div className="h-full flex flex-col bg-white border-r border-neutral-200">
       <div className="px-3 pt-3 pb-1.5 border-b border-neutral-200">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="font-semibold text-sm">Mission Control</h2>
-          <span className="text-[10px] text-neutral-500 font-mono">
+          <h2 className="font-serif text-[15px] font-medium tracking-[-0.01em]">
+            Mission Control
+          </h2>
+          <span className="text-[10px] text-neutral-500 font-mono tabular-nums">
             cyprus-cu · prod
           </span>
         </div>

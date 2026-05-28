@@ -60,10 +60,10 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
           <EltropyMark className="h-[18px] w-[18px] text-white" />
         </div>
         <div className="leading-tight">
-          <div className="text-[15px] font-semibold tracking-tight">
+          <div className="font-serif text-[18px] font-medium tracking-[-0.01em]">
             Mission Control
           </div>
-          <div className="text-[10px] text-neutral-500">
+          <div className="text-[10px] text-neutral-500 tracking-wide uppercase">
             Eltropy &middot; Cyprus Credit Union
           </div>
         </div>

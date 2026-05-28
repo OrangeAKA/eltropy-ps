@@ -41,11 +41,11 @@ export function ComposerTab({
       <div className="p-4">
         <div className="mb-3">
           <div className="flex items-baseline gap-2 mb-1">
-            <h3 className="font-semibold text-base tracking-tight">
+            <h3 className="font-serif text-[20px] font-medium tracking-[-0.01em]">
               {workflow.displayName ?? workflow.name}
             </h3>
             <span
-              className="font-mono text-[10px] text-neutral-400"
+              className="font-mono tabular-nums text-[10px] text-neutral-400"
               title={`Workflow ID: ${workflow.id}`}
             >
               {workflow.id}
@@ -57,7 +57,7 @@ export function ComposerTab({
           <div className="flex flex-wrap items-center gap-1 mt-2">
             <span className="text-[10px] text-neutral-500">Triggers on</span>
             {workflow.triggerIntents.map((i) => (
-              <Badge key={i} variant="secondary" className="font-mono text-[10px]">
+              <Badge key={i} variant="secondary" className="font-mono tabular-nums text-[10px]">
                 {i}
               </Badge>
             ))}
@@ -140,7 +140,7 @@ function StatusStrip({
         <span className="text-xs font-semibold text-brand-900">
           Running {workflowName}
         </span>
-        <span className="text-[11px] text-brand-700 ml-auto font-mono">
+        <span className="text-[11px] text-brand-700 ml-auto font-mono tabular-nums">
           step {currentStep || completedCount} of {totalSteps}
         </span>
       </div>
@@ -223,7 +223,7 @@ function WorkflowNode({
         </span>
         <span className="font-medium text-sm truncate">{name}</span>
         {state === "completed" && durationMs !== undefined && (
-          <span className="ml-auto font-mono text-[10px] text-neutral-500 tabular-nums shrink-0">
+          <span className="ml-auto font-mono tabular-nums text-[10px] text-neutral-500 tabular-nums shrink-0">
             {durationMs}ms
           </span>
         )}

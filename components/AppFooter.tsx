@@ -27,7 +27,7 @@ export function AppFooter() {
           CFI-compliant STT provider.
         </span>
       </div>
-      <div className="font-mono shrink-0 ml-4">{time}</div>
+      <div className="font-mono tabular-nums shrink-0 ml-4">{time}</div>
     </footer>
   );
 }
