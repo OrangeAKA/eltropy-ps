@@ -488,13 +488,13 @@ function CompletionCard({
         <div className="flex items-center gap-2 mb-1">
           <CheckCircle2 className="h-4 w-4 text-emerald-700" />
           <span className="font-medium text-sm text-emerald-900">
-            Loan funded
+            Offer dispatched, awaiting signature
           </span>
         </div>
         <p className="text-xs text-emerald-800 leading-snug">
           ${offer.amount.toLocaleString()} / {offer.termMonths} mo /{" "}
           {offer.apr.toFixed(2)}% APR / ${offer.monthlyPayment.toFixed(2)}/mo.
-          E-sign link dispatched to member.
+          E-sign link sent to member; funding releases on signature.
         </p>
         <div className="grid grid-cols-2 gap-2 mt-2 text-[10px]">
           <div>

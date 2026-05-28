@@ -174,7 +174,7 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
       const intent = state.context.intent?.intent;
       let systemText = "Workflow complete.";
       if (intent === "lending_inquiry" || intent === "refinance_inquiry") {
-        systemText = "✓ E-sign link sent. Check your messages for the offer.";
+        systemText = "✓ E-sign link sent. Check your messages to review and sign the offer.";
       } else if (intent === "card_dispute") {
         const d = state.context.disputeDetails;
         systemText = d?.provisionalCreditEligible

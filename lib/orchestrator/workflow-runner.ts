@@ -243,9 +243,14 @@ export async function runWorkflow(
       );
     }
 
-    // After loan decisioning, check whether the workflow needs a human pause
-    // before e-sign dispatch.
-    if (step.skillId === "skill-loan-decisioning" && context.loanOffer?.approved) {
+    // After loan decisioning, check whether THIS step is the human-review step
+    // before e-sign dispatch. One-Call Lending runs loan-decisioning twice
+    // (auto then human-review); only the humanInTheLoop step should pause.
+    if (
+      step.skillId === "skill-loan-decisioning" &&
+      step.humanInTheLoop &&
+      context.loanOffer?.approved
+    ) {
       const offer = context.loanOffer;
       callbacks.onLog(
         makeLog(
