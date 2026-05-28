@@ -79,18 +79,44 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         [action.result.skillId]: action.result,
       };
       let loanOffer = state.context.loanOffer;
+      let disputeDetails = state.context.disputeDetails;
+      let accountSummary = state.context.accountSummary;
       if (
         action.result.skillId === "skill-loan-decisioning" &&
         action.result.outputs
       ) {
-        const offerOutputs = action.result.outputs as {
+        const o = action.result.outputs as {
           offer?: DemoState["context"]["loanOffer"];
         };
-        if (offerOutputs.offer) loanOffer = offerOutputs.offer;
+        if (o.offer) loanOffer = o.offer;
+      }
+      if (
+        action.result.skillId === "skill-transaction-lookup" &&
+        action.result.outputs
+      ) {
+        const o = action.result.outputs as {
+          dispute?: DemoState["context"]["disputeDetails"];
+        };
+        if (o.dispute) disputeDetails = o.dispute;
+      }
+      if (
+        action.result.skillId === "skill-account-summary" &&
+        action.result.outputs
+      ) {
+        const o = action.result.outputs as {
+          summary?: DemoState["context"]["accountSummary"];
+        };
+        if (o.summary) accountSummary = o.summary;
       }
       return {
         ...state,
-        context: { ...state.context, skillResults, loanOffer },
+        context: {
+          ...state.context,
+          skillResults,
+          loanOffer,
+          disputeDetails,
+          accountSummary,
+        },
         completedSkillIds: completedIds,
         activeSkillId: undefined,
         auditLog: [...state.auditLog, action.log],
@@ -106,11 +132,20 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
           title: action.payload.title,
           summary: action.payload.summary,
         },
-        context: { ...state.context, loanOffer: action.payload.offer },
+        context: {
+          ...state.context,
+          loanOffer: action.payload.offer ?? state.context.loanOffer,
+          disputeDetails:
+            action.payload.dispute ?? state.context.disputeDetails,
+        },
         auditLog: [...state.auditLog, action.log],
       };
 
-    case "USER_CONFIRMED":
+    case "USER_CONFIRMED": {
+      const isDispute = state.awaitingConfirmFor?.skillId === "skill-dispute-file";
+      const officerText = isDispute
+        ? "Filing this with the network now. You'll see provisional credit on your account today if it's under our $2,500 threshold."
+        : "Sending you a pre-qualified offer to review and e-sign now.";
       return {
         ...state,
         phase: "executing_post_confirm",
@@ -121,11 +156,12 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
           {
             id: `msg_${Date.now()}`,
             sender: "officer",
-            text: "Sending you a pre-qualified offer to review and e-sign now.",
+            text: officerText,
             timestamp: Date.now(),
           },
         ],
       };
+    }
 
     case "USER_MODIFIED":
       return {
@@ -134,7 +170,22 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         awaitingConfirmFor: undefined,
       };
 
-    case "WORKFLOW_COMPLETED":
+    case "WORKFLOW_COMPLETED": {
+      const intent = state.context.intent?.intent;
+      let systemText = "Workflow complete.";
+      if (intent === "lending_inquiry" || intent === "refinance_inquiry") {
+        systemText = "✓ E-sign link sent. Check your messages for the offer.";
+      } else if (intent === "card_dispute") {
+        const d = state.context.disputeDetails;
+        systemText = d?.provisionalCreditEligible
+          ? `✓ Dispute filed. Provisional credit of $${d.amount.toFixed(2)} posted to your checking account.`
+          : "✓ Dispute filed. Network investigation in progress; we'll text you status updates.";
+      } else if (intent === "balance_inquiry") {
+        const s = state.context.accountSummary;
+        systemText = s
+          ? `✓ Balances surfaced. Total deposits $${s.totalDeposits.toFixed(2)} across ${s.accounts.length} account${s.accounts.length === 1 ? "" : "s"}.`
+          : "✓ Balances surfaced.";
+      }
       return {
         ...state,
         phase: "completed",
@@ -144,11 +195,12 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
           {
             id: `msg_${Date.now()}`,
             sender: "system",
-            text: "✓ E-sign link sent. Check your messages for the offer.",
+            text: systemText,
             timestamp: Date.now(),
           },
         ],
       };
+    }
 
     case "MESSAGE_APPENDED":
       return {

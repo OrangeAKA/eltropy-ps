@@ -11,7 +11,7 @@
 import { useReducer, useRef, useCallback } from "react";
 import { demoReducer, initialDemoState } from "@/lib/demo-state";
 import { handleTrigger } from "@/lib/orchestrator/trigger-handler";
-import type { TriggerEvent, LoanOffer, DemoState } from "@/lib/types";
+import type { TriggerEvent, DemoState } from "@/lib/types";
 
 type ConfirmResolver = {
   resolve: () => void;
@@ -97,10 +97,7 @@ export function useDemoController(): {
               };
               dispatch({
                 type: "AWAIT_CONFIRM",
-                payload: {
-                  ...payload,
-                  offer: payload.offer as LoanOffer,
-                },
+                payload,
                 log,
               });
             }),

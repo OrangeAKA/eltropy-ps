@@ -25,6 +25,10 @@ import { executeIdentityVerification } from "@/lib/skills/identity-verification"
 import { executeSoftCreditPull } from "@/lib/skills/soft-credit-pull";
 import { executeLoanDecisioning } from "@/lib/skills/loan-decisioning";
 import { executeESignDispatch } from "@/lib/skills/e-sign-dispatch";
+import { executeTransactionLookup } from "@/lib/skills/transaction-lookup";
+import { executeDisputeFile } from "@/lib/skills/dispute-file";
+import { executeAccountSummary } from "@/lib/skills/account-summary";
+import type { DisputeDetails, AccountSummary } from "@/lib/types";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Public types
@@ -39,7 +43,8 @@ export type RunnerCallbacks = {
     skillId: string;
     title: string;
     summary: string;
-    offer: LoanOffer;
+    offer?: LoanOffer;
+    dispute?: DisputeDetails;
   }) => Promise<void>;
   onComplete: () => void;
 };
@@ -158,6 +163,16 @@ export async function runWorkflow(
       const decisioningOutputs = result.outputs as { offer: LoanOffer };
       context.loanOffer = decisioningOutputs.offer;
     }
+    // Capture dispute details for downstream officer review + UI
+    if (step.skillId === "skill-transaction-lookup" && result.outputs) {
+      const out = result.outputs as { dispute: DisputeDetails };
+      context.disputeDetails = out.dispute;
+    }
+    // Capture account summary
+    if (step.skillId === "skill-account-summary" && result.outputs) {
+      const out = result.outputs as { summary: AccountSummary };
+      context.accountSummary = out.summary;
+    }
 
     callbacks.onLog(
       makeLog(
@@ -180,6 +195,52 @@ export async function runWorkflow(
       );
       callbacks.onComplete();
       return context;
+    }
+
+    // After transaction-lookup, pause for officer review before filing the
+    // dispute with Velera. Reg E requires accurate identification of the
+    // disputed transaction before provisional credit issues.
+    if (
+      step.skillId === "skill-transaction-lookup" &&
+      context.disputeDetails &&
+      step.humanInTheLoop
+    ) {
+      const d = context.disputeDetails;
+      callbacks.onLog(
+        makeLog(
+          startedAt,
+          "INFO",
+          "workflow.pause",
+          `workflow.pause(reason=awaiting_human_confirm) — dispute ready for officer review`,
+        ),
+      );
+      try {
+        await callbacks.awaitConfirm({
+          skillId: "skill-dispute-file",
+          title: "File dispute with Velera?",
+          summary: `$${d.amount.toFixed(2)} at ${d.merchant} on ${d.transactionDate}, card ending ${d.cardLast4}`,
+          dispute: d,
+        });
+      } catch {
+        callbacks.onLog(
+          makeLog(
+            startedAt,
+            "WARN",
+            "workflow.abort",
+            `workflow.abort() — officer modified or cancelled dispute filing`,
+          ),
+        );
+        callbacks.onComplete();
+        return context;
+      }
+      callbacks.onLog(
+        makeLog(
+          startedAt,
+          "INFO",
+          "workflow.resume",
+          `workflow.resume() — officer confirmed dispute filing`,
+        ),
+      );
     }
 
     // After loan decisioning, check whether the workflow needs a human pause
@@ -277,19 +338,26 @@ async function dispatchSkill(
       const fico =
         (creditResult?.outputs as { fico?: number } | undefined)?.fico ??
         context.member.fico;
-      const amount = (context.intent?.entities.amount as number | undefined) ?? 25000;
+      const entities = context.intent?.entities ?? {};
+      const amount = (entities.amount as number | undefined) ?? 25000;
       const productType =
-        (context.intent?.entities.product as
+        (entities.product as
           | "auto_loan"
           | "mortgage"
           | "heloc"
+          | "personal_loan"
           | undefined) ?? "auto_loan";
+      const vehicleYear = entities.vehicle_year as number | undefined;
+      const termMonths = (entities.term_months as number | undefined) ?? 60;
+      const existingApr = entities.existing_apr as number | undefined;
       return executeLoanDecisioning({
         member: context.member,
         ficoFromBureau: fico,
         amount,
-        termMonths: 60,
+        termMonths,
         productType,
+        vehicleYear,
+        existingLoanApr: existingApr,
       });
     }
 
@@ -308,6 +376,46 @@ async function dispatchSkill(
         offer: context.loanOffer,
         channel: "sms",
       });
+
+    case "skill-transaction-lookup": {
+      const entities = context.intent?.entities ?? {};
+      const amount = (entities.amount as number | undefined) ?? 0;
+      const merchant = entities.merchant as string | undefined;
+      const txnDate = entities.transaction_date as string | undefined;
+      const cardLast4 = entities.card_last4 as string | undefined;
+      return executeTransactionLookup({
+        member: context.member,
+        amount,
+        merchant,
+        transactionDate: txnDate,
+        cardLast4,
+      });
+    }
+
+    case "skill-dispute-file": {
+      if (!context.disputeDetails) {
+        return {
+          skillId,
+          status: "failed",
+          startedAt: new Date().toISOString(),
+          inputs: {},
+          error: "No dispute details in context; cannot file dispute",
+        };
+      }
+      return executeDisputeFile({
+        member: context.member,
+        dispute: context.disputeDetails,
+      });
+    }
+
+    case "skill-account-summary": {
+      const entities = context.intent?.entities ?? {};
+      const filter = entities.account_type as string | undefined;
+      return executeAccountSummary({
+        member: context.member,
+        accountTypeFilter: filter,
+      });
+    }
 
     default:
       return {

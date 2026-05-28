@@ -94,6 +94,46 @@ export type LoanOffer = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// Card dispute (used by transaction-lookup + dispute-file skills)
+// ────────────────────────────────────────────────────────────────────────────
+
+export type DisputeDetails = {
+  transactionId: string;
+  amount: number;
+  merchant: string;
+  transactionDate: string;
+  cardLast4: string;
+  reportedAt: string;
+  regEDaysRemaining: number;
+  provisionalCreditEligible: boolean;
+  liabilityCapUsd: number;
+  rationale: string;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// Balance inquiry (used by account-summary skill)
+// ────────────────────────────────────────────────────────────────────────────
+
+export type AccountSummary = {
+  asOf: string;
+  accounts: Array<{
+    type: string;
+    accountId: string;
+    balance: number;
+    lastActivity?: string;
+  }>;
+  totalDeposits: number;
+  totalCredit: number;
+  recentTransactions: Array<{
+    date: string;
+    description: string;
+    amount: number;
+    accountId: string;
+  }>;
+  rationale: string;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // Workflow execution context
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -105,6 +145,8 @@ export type WorkflowContext = {
   trigger?: TriggerEvent;
   skillResults: Record<string, SkillExecutionResult>;
   loanOffer?: LoanOffer;
+  disputeDetails?: DisputeDetails;
+  accountSummary?: AccountSummary;
 };
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -156,7 +198,13 @@ export type DemoAction =
   | { type: "SKILL_COMPLETED"; result: SkillExecutionResult; log: AuditLogEntry }
   | {
       type: "AWAIT_CONFIRM";
-      payload: { skillId: string; title: string; summary: string; offer: LoanOffer };
+      payload: {
+        skillId: string;
+        title: string;
+        summary: string;
+        offer?: LoanOffer;
+        dispute?: DisputeDetails;
+      };
       log: AuditLogEntry;
     }
   | { type: "USER_CONFIRMED"; log: AuditLogEntry }

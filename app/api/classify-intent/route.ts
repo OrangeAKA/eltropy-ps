@@ -25,11 +25,23 @@ const SYSTEM_PROMPT = `You are an intent classifier for a US credit union's memb
 - general_handoff: Anything else, unclear, or out of scope
 
 Also extract relevant entities (only include keys with confident values):
+
+Common:
 - amount: dollar amount as integer (e.g., 25000 for "$25K" or "twenty-five thousand")
-- product: one of "auto_loan" | "mortgage" | "heloc" | "credit_card" | "personal_loan"
-- vehicle: vehicle description if mentioned (e.g., "2024 Honda CR-V")
+- account_type: "checking" | "savings" | "money_market" | "credit_card" | "all" (for balance_inquiry only)
+
+Lending / refinance:
+- product: "auto_loan" | "mortgage" | "heloc" | "credit_card" | "personal_loan"
+- vehicle: full vehicle description if mentioned (e.g., "2024 Honda CR-V")
+- vehicle_year: integer 4-digit year if a vehicle year is mentioned (e.g., 2024)
 - existing_balance: existing loan balance as integer if mentioned
-- term_months: loan term in months if mentioned
+- existing_apr: existing loan APR as a number if mentioned (e.g., 7.5)
+- term_months: loan term in months if mentioned (assume 60 if "5 years", 72 if "6 years")
+
+Card dispute:
+- merchant: merchant name as it appears on the statement, if mentioned (e.g., "TICKETLY*GHOST")
+- transaction_date: ISO date or natural-language reference if given (e.g., "last Tuesday", "2026-05-21")
+- card_last4: last 4 digits of card if mentioned
 
 Confidence is your assessment from 0.0 to 1.0.
 

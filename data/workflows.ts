@@ -136,4 +136,75 @@ export const workflows: Workflow[] = [
       },
     ],
   },
+  {
+    id: 'workflow-003',
+    name: 'CardDisputeFlow',
+    displayName: 'Card Dispute Resolution',
+    description:
+      "Handles inbound 'I didn't recognize this charge' disputes end-to-end. Resolves the member, verifies identity, retrieves the disputed transaction, pauses for officer review under Reg E, then files the dispute with Velera and issues provisional credit if eligible.",
+    triggerIntents: ['card_dispute'],
+    steps: [
+      {
+        skillId: 'skill-member-lookup',
+        humanInTheLoop: false,
+        guardrails: { autoExecute: true },
+      },
+      {
+        skillId: 'skill-identity-verify',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Step-up auth required: dispute is account-impacting',
+          autoExecute: true,
+        },
+      },
+      {
+        skillId: 'skill-transaction-lookup',
+        displayName: 'Transaction Lookup & Reg E Triage',
+        humanInTheLoop: true,
+        guardrails: {
+          condition: 'Officer confirms the disputed transaction before filing',
+          autoExecute: false,
+        },
+      },
+      {
+        skillId: 'skill-dispute-file',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Files with Velera; auto-issues provisional credit when amount under $2,500',
+          autoExecute: true,
+        },
+      },
+    ],
+  },
+  {
+    id: 'workflow-004',
+    name: 'BalanceInquiryFlow',
+    displayName: 'Balance Inquiry',
+    description:
+      'Handles inbound balance and recent-transaction inquiries. Resolves the member, verifies identity, retrieves account balances, and surfaces the last few transactions for the officer to read back.',
+    triggerIntents: ['balance_inquiry'],
+    steps: [
+      {
+        skillId: 'skill-member-lookup',
+        humanInTheLoop: false,
+        guardrails: { autoExecute: true },
+      },
+      {
+        skillId: 'skill-identity-verify',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Identity must verify before account data is disclosed (GLBA)',
+          autoExecute: true,
+        },
+      },
+      {
+        skillId: 'skill-account-summary',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Discloses only the account types the member asked about',
+          autoExecute: true,
+        },
+      },
+    ],
+  },
 ]
