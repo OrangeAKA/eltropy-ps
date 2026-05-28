@@ -32,7 +32,7 @@ const TRACE_STEPS: Array<{
 export function ArchitectureDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(96vw,1180px)] max-w-none gap-0 p-0 bg-card border border-rule-strong shadow-[0_28px_60px_-12px_rgba(8,79,78,0.18),0_8px_24px_-8px_rgba(8,79,78,0.12)] rounded-xl overflow-hidden">
+      <DialogContent className="w-[min(96vw,1180px)] max-w-[min(96vw,1180px)] sm:max-w-[min(96vw,1180px)] gap-0 p-0 bg-card border border-rule-strong shadow-[0_28px_60px_-12px_rgba(8,79,78,0.18),0_8px_24px_-8px_rgba(8,79,78,0.12)] rounded-xl overflow-hidden max-h-[92vh] overflow-y-auto">
         {/* Masthead */}
         <DialogHeader className="px-6 pt-5 pb-4 border-b border-rule bg-[color:color-mix(in_oklch,var(--color-brand-50)_42%,white)]">
           <div className="flex items-start gap-3">
