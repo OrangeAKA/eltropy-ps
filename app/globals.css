@@ -8,22 +8,26 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Brand palette: Eltropy-leaning teal. Used for primary actions, active
-     states, focus rings, and product-identity surfaces. */
-  --color-brand-50: #e6f4f4;
-  --color-brand-100: #c2e3e2;
-  --color-brand-200: #95cdcc;
-  --color-brand-300: #5fb5b3;
-  --color-brand-400: #2fa19f;
-  --color-brand-500: #1aa09e;
-  --color-brand-600: #0e7c7b;
-  --color-brand-700: #0a6967;
-  --color-brand-800: #084f4e;
-  --color-brand-900: #053230;
+  /* Brand palette in OKLCH. Hue 195 (teal). Chroma drops as lightness moves
+     toward extremes; high chroma at 95% L looks garish (Impeccable rule).
+     Used for primary actions, active states, focus rings, identity surfaces. */
+  --color-brand-50:  oklch(0.972 0.015 195);
+  --color-brand-100: oklch(0.925 0.030 195);
+  --color-brand-200: oklch(0.855 0.050 195);
+  --color-brand-300: oklch(0.755 0.072 195);
+  --color-brand-400: oklch(0.650 0.085 195);
+  --color-brand-500: oklch(0.555 0.090 195);
+  --color-brand-600: oklch(0.460 0.085 195);
+  --color-brand-700: oklch(0.380 0.080 195);
+  --color-brand-800: oklch(0.310 0.065 195);
+  --color-brand-900: oklch(0.230 0.045 195);
 
-  /* Page surface: a cool tinted off-white that harmonizes with the teal
-     accent. Cards and panes stay pure white for a subtle elevation cue. */
-  --color-surface-page: #f7f8fa;
+  /* Page surface: barely tinted toward brand hue. Cards still elevate above
+     the page through chroma + tiny lightness shift, not box-shadow. */
+  --color-surface-page: oklch(0.980 0.005 195);
+  --color-surface-card: oklch(0.995 0.003 195);
+  --color-rule:         oklch(0.920 0.008 195);
+  --color-rule-strong:  oklch(0.880 0.012 195);
 
   --font-sans:
     var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
@@ -74,24 +78,27 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* Neutrals tinted toward brand hue 195. Chroma 0.005-0.015: perceptible
+     cohesion without going colorful. Per Impeccable: pure white and pure
+     black do not appear; every surface carries a hint of the brand. */
+  --background: oklch(0.995 0.003 195);
+  --foreground: oklch(0.220 0.012 195);
+  --card: oklch(0.995 0.003 195);
+  --card-foreground: oklch(0.220 0.012 195);
+  --popover: oklch(0.995 0.003 195);
+  --popover-foreground: oklch(0.220 0.012 195);
+  --primary: oklch(0.460 0.085 195);
+  --primary-foreground: oklch(0.995 0.003 195);
+  --secondary: oklch(0.965 0.008 195);
+  --secondary-foreground: oklch(0.260 0.015 195);
+  --muted: oklch(0.965 0.008 195);
+  --muted-foreground: oklch(0.500 0.012 195);
+  --accent: oklch(0.965 0.008 195);
+  --accent-foreground: oklch(0.260 0.015 195);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.920 0.008 195);
+  --input: oklch(0.920 0.008 195);
+  --ring: oklch(0.460 0.085 195);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
