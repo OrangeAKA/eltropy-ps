@@ -21,8 +21,8 @@ export function AppFooter() {
       <div className="flex items-center gap-1.5">
         <Info className="h-3 w-3" />
         <span>
-          Synthetic data prototype — built for the Eltropy FDPM evaluation.
-          Voice transcription uses your browser's built-in Web Speech engine
+          Synthetic data prototype, built for the Eltropy FDPM evaluation.
+          Voice transcription uses your browser&apos;s built-in Web Speech engine
           (Chrome or Edge recommended). In production, Eltropy would use a
           CFI-compliant STT provider.
         </span>
