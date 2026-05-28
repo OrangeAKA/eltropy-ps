@@ -30,17 +30,22 @@ export function ComposerTab({
     <ScrollArea className="h-full">
       <div className="p-4">
         <div className="mb-3">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-medium text-sm">{workflow.name}</h3>
-            <Badge variant="outline" className="font-mono text-[10px]">
+          <div className="flex items-baseline gap-2 mb-1">
+            <h3 className="font-semibold text-base tracking-tight">
+              {workflow.displayName ?? workflow.name}
+            </h3>
+            <span
+              className="font-mono text-[10px] text-neutral-400"
+              title={`Workflow ID: ${workflow.id}`}
+            >
               {workflow.id}
-            </Badge>
+            </span>
           </div>
           <p className="text-xs text-neutral-600 leading-snug">
             {workflow.description}
           </p>
-          <div className="flex flex-wrap gap-1 mt-2">
-            <span className="text-[10px] text-neutral-500">Trigger intents:</span>
+          <div className="flex flex-wrap items-center gap-1 mt-2">
+            <span className="text-[10px] text-neutral-500">Triggers on</span>
             {workflow.triggerIntents.map((i) => (
               <Badge key={i} variant="secondary" className="font-mono text-[10px]">
                 {i}
@@ -66,7 +71,7 @@ export function ComposerTab({
                 <div key={step.skillId}>
                   <WorkflowNode
                     index={idx + 1}
-                    name={skill.name}
+                    name={step.displayName ?? skill.name}
                     state={state}
                     humanInTheLoop={step.humanInTheLoop}
                     guardrailCondition={step.guardrails.condition}
@@ -140,7 +145,7 @@ function WorkflowNode({
         <span className="font-medium text-sm">{name}</span>
       </div>
 
-      <div className="flex flex-wrap gap-1 ml-7">
+      <div className="flex flex-wrap items-center gap-1 ml-7">
         {humanInTheLoop && (
           <Badge variant="outline" className="text-[10px] gap-1">
             <AlertCircle className="h-2.5 w-2.5" />
@@ -156,18 +161,15 @@ function WorkflowNode({
               : "border-amber-300 text-amber-700",
           )}
         >
-          {autoExecute ? "auto-execute" : "manual"}
+          {autoExecute ? "Auto" : "Manual"}
         </Badge>
-        {guardrailCondition && (
-          <Badge
-            variant="secondary"
-            className="text-[10px] font-mono normal-case max-w-full truncate"
-            title={guardrailCondition}
-          >
-            ⚙ {guardrailCondition}
-          </Badge>
-        )}
       </div>
+      {guardrailCondition && (
+        <div className="ml-7 mt-1.5 flex items-start gap-1.5 text-[11px] text-neutral-600 leading-snug">
+          <span className="text-neutral-400 mt-px">↳</span>
+          <span>{guardrailCondition}</span>
+        </div>
+      )}
     </Card>
   );
 }
