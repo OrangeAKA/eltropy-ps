@@ -19,6 +19,8 @@ export type Member = {
   tenureYears: number
   memberTier: 'prime' | 'standard' | 'sub-prime'
   fico: number
+  monthlyIncome: number
+  monthlyDebts: number
   products: Product[]
   avatarSeed: string
 }
@@ -40,6 +42,8 @@ export const members: Member[] = [
     tenureYears: 8.2,
     memberTier: 'prime',
     fico: 758,
+    monthlyIncome: 9500,
+    monthlyDebts: 1800,
     products: [
       {
         type: 'checking',
@@ -86,6 +90,8 @@ export const members: Member[] = [
     tenureYears: 3.5,
     memberTier: 'standard',
     fico: 692,
+    monthlyIncome: 5200,
+    monthlyDebts: 1400,
     products: [
       {
         type: 'checking',
