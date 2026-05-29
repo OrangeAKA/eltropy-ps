@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Public_Sans, Source_Serif_4, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 // Public Sans is the typeface of the US Web Design System. It carries that
@@ -47,6 +48,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-surface-page text-neutral-900 font-sans">
         {children}
+        <Analytics />
       </body>
     </html>
   );
