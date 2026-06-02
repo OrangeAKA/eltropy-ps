@@ -15,6 +15,11 @@ import type {
   TriggerEvent,
   AuditLogEntry,
   LoanOffer,
+  QueuedTransferItem,
+} from "@/lib/types";
+import {
+  TRANSFER_AUTONOMOUS_THRESHOLD_USD,
+  TRANSFER_QUEUE_THRESHOLD_USD,
 } from "@/lib/types";
 import type { Workflow } from "@/data/workflows";
 import type { Member } from "@/data/members";
@@ -31,6 +36,7 @@ import { executeAccountSummary } from "@/lib/skills/account-summary";
 import { executeStepUpAuth } from "@/lib/skills/stepup-auth";
 import { executeTransferPolicyCheck } from "@/lib/skills/transfer-policy-check";
 import { executeTransferExecute } from "@/lib/skills/transfer-execute";
+import { executeCallAuth } from "@/lib/skills/call-auth";
 import type {
   DisputeDetails,
   AccountSummary,
@@ -56,6 +62,8 @@ export type RunnerCallbacks = {
     offer?: LoanOffer;
     dispute?: DisputeDetails;
   }) => Promise<void>;
+  /** Stages item in the officer queue; resolves on approve, throws on decline. */
+  awaitQueueAction: (item: QueuedTransferItem) => Promise<void>;
   onComplete: () => void;
 };
 
@@ -380,49 +388,111 @@ export async function runWorkflow(
       return context;
     }
 
-    // Policy passed — pause for officer confirm before money actually moves.
-    // The officer is accountable for hitting Execute; the member's verbal /
-    // step-up authorization is on record; the rules cleared the request.
-    // This is the same gate pattern as the loan-offer dispatch.
+    // Policy passed — route based on amount tier before money moves.
     if (
       step.skillId === "skill-transfer-policy-check" &&
       context.transferDetails?.policy?.allowed
     ) {
       const td = context.transferDetails;
-      callbacks.onLog(
-        makeLog(
-          startedAt,
-          "INFO",
-          "workflow.pause",
-          `workflow.pause(reason=awaiting_human_confirm) — transfer ready for officer posting`,
-        ),
-      );
-      try {
-        await callbacks.awaitConfirm({
-          skillId: "skill-transfer-execute",
-          title: "Post transfer to member's accounts?",
-          summary: `$${td.amount.toLocaleString()} from ${td.fromAccountType} (${td.fromAccountId ?? "—"}) → ${td.toAccountType} (${td.toAccountId ?? "—"})`,
-        });
-      } catch {
+      const amount = td.amount;
+
+      if (amount < TRANSFER_AUTONOMOUS_THRESHOLD_USD) {
+        // Fully autonomous tier: execute immediately, no officer gate.
+        context.transferDetails = { ...td, transferTier: "autonomous" };
         callbacks.onLog(
           makeLog(
             startedAt,
-            "WARN",
-            "workflow.abort",
-            `workflow.abort() — officer cancelled transfer before posting`,
+            "INFO",
+            "workflow.autonomous",
+            `workflow.autonomous() — $${amount.toLocaleString()} below $${TRANSFER_AUTONOMOUS_THRESHOLD_USD.toLocaleString()} threshold; executing without officer gate`,
           ),
         );
-        callbacks.onComplete();
-        return context;
+      } else if (amount < TRANSFER_QUEUE_THRESHOLD_USD) {
+        // Queue tier: stage in officer queue; runner waits for officer action.
+        const queueItemId = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+        context.transferDetails = { ...td, transferTier: "queued", queueItemId };
+        const item: QueuedTransferItem = {
+          id: queueItemId,
+          memberId: context.member!.id,
+          memberName: context.member!.fullName,
+          amount,
+          fromAccountType: td.fromAccountType,
+          toAccountType: td.toAccountType,
+          fromAccountId: td.fromAccountId,
+          toAccountId: td.toAccountId,
+          authMethod: td.stepUp?.method ?? "verbal_on_voice",
+          policyDecision: td.policy!,
+          queuedAt: Date.now(),
+          status: "pending",
+        };
+        callbacks.onLog(
+          makeLog(
+            startedAt,
+            "INFO",
+            "workflow.queue",
+            `workflow.queue() — $${amount.toLocaleString()} staged in officer queue (id=${queueItemId}); runner awaiting officer action`,
+          ),
+        );
+        try {
+          await callbacks.awaitQueueAction(item);
+        } catch {
+          callbacks.onLog(
+            makeLog(
+              startedAt,
+              "WARN",
+              "workflow.abort",
+              `workflow.abort() — officer declined queued transfer`,
+            ),
+          );
+          callbacks.onComplete();
+          return context;
+        }
+        callbacks.onLog(
+          makeLog(
+            startedAt,
+            "INFO",
+            "workflow.resume",
+            `workflow.resume() — officer approved queued transfer`,
+          ),
+        );
+      } else {
+        // Synchronous tier: officer must confirm live before execution.
+        context.transferDetails = { ...td, transferTier: "synchronous" };
+        callbacks.onLog(
+          makeLog(
+            startedAt,
+            "INFO",
+            "workflow.pause",
+            `workflow.pause(reason=awaiting_human_confirm) — $${amount.toLocaleString()} above queue threshold; requires synchronous officer posting`,
+          ),
+        );
+        try {
+          await callbacks.awaitConfirm({
+            skillId: "skill-transfer-execute",
+            title: "Post transfer to member's accounts?",
+            summary: `$${amount.toLocaleString()} from ${td.fromAccountType} (${td.fromAccountId ?? "—"}) → ${td.toAccountType} (${td.toAccountId ?? "—"})`,
+          });
+        } catch {
+          callbacks.onLog(
+            makeLog(
+              startedAt,
+              "WARN",
+              "workflow.abort",
+              `workflow.abort() — officer cancelled transfer before posting`,
+            ),
+          );
+          callbacks.onComplete();
+          return context;
+        }
+        callbacks.onLog(
+          makeLog(
+            startedAt,
+            "INFO",
+            "workflow.resume",
+            `workflow.resume() — officer confirmed transfer posting`,
+          ),
+        );
       }
-      callbacks.onLog(
-        makeLog(
-          startedAt,
-          "INFO",
-          "workflow.resume",
-          `workflow.resume() — officer confirmed transfer posting`,
-        ),
-      );
     }
 
     if (
@@ -491,6 +561,17 @@ async function dispatchSkill(
   skillId: string,
   context: WorkflowContext,
 ): Promise<SkillExecutionResult> {
+  // call-auth runs before member-lookup so context.member is not yet set
+  if (skillId === "skill-call-auth") {
+    if (!context.trigger) {
+      return { skillId, status: "failed", startedAt: new Date().toISOString(), inputs: {}, error: "Missing trigger" };
+    }
+    return executeCallAuth({
+      phone: context.trigger.fromPhone,
+      channel: context.trigger.channel,
+    });
+  }
+
   if (!context.member || !context.trigger) {
     return {
       skillId,

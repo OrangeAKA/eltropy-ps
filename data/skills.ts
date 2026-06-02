@@ -160,6 +160,28 @@ export const skills: Skill[] = [
     avgRuntimeMs: 1200,
   },
   {
+    id: 'skill-call-auth',
+    name: 'Call Authentication',
+    description:
+      'Authenticates a voice call at the channel level before any member data is accessed. Verifies the inbound ANI (Automatic Number Identification) against the registered phone on file and confirms the caller passed DTMF PIN entry or IVR passphrase. Returns a pre-verified flag that downstream identity and step-up auth skills can leverage to reduce friction.',
+    publisher: 'eltropy',
+    category: 'compliance',
+    inputs: [
+      { name: 'phone', type: 'string', required: true },
+      { name: 'channel', type: 'TriggerChannel', required: true },
+    ],
+    outputs: [
+      { name: 'aniVerified', type: 'boolean' },
+      { name: 'dtmfPinVerified', type: 'boolean' },
+      { name: 'preVerified', type: 'boolean' },
+    ],
+    requiredIntegrations: ['Eltropy Voice Platform', 'STIR/SHAKEN'],
+    regulatoryTags: ['FFIEC Authentication Guidance', 'TCPA', 'GLBA'],
+    version: '1.0.0',
+    status: 'installed',
+    avgRuntimeMs: 180,
+  },
+  {
     id: 'skill-stepup-auth',
     name: 'Step-Up Authentication',
     description:

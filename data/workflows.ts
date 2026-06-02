@@ -29,6 +29,15 @@ export const workflows: Workflow[] = [
     triggerIntents: ['lending_inquiry'],
     steps: [
       {
+        skillId: 'skill-call-auth',
+        displayName: 'Call Authentication',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Voice channel only: ANI check + DTMF PIN before any member data is accessed',
+          autoExecute: true,
+        },
+      },
+      {
         skillId: 'skill-member-lookup',
         humanInTheLoop: false,
         guardrails: {
@@ -86,6 +95,15 @@ export const workflows: Workflow[] = [
       'Handles inbound auto loan refinance requests. Resolves the member, verifies identity, retrieves the existing loan details, runs a comparative-rate decisioning pass against current rate sheet, then pauses for human MSR review before presenting the refinance offer.',
     triggerIntents: ['refinance_inquiry'],
     steps: [
+      {
+        skillId: 'skill-call-auth',
+        displayName: 'Call Authentication',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Voice channel only: ANI check + DTMF PIN before any member data is accessed',
+          autoExecute: true,
+        },
+      },
       {
         skillId: 'skill-member-lookup',
         humanInTheLoop: false,
@@ -145,6 +163,15 @@ export const workflows: Workflow[] = [
     triggerIntents: ['card_dispute'],
     steps: [
       {
+        skillId: 'skill-call-auth',
+        displayName: 'Call Authentication',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Voice channel only: ANI check + DTMF PIN before any member data is accessed',
+          autoExecute: true,
+        },
+      },
+      {
         skillId: 'skill-member-lookup',
         humanInTheLoop: false,
         guardrails: { autoExecute: true },
@@ -184,6 +211,15 @@ export const workflows: Workflow[] = [
       "Handles member-initiated transfers between their own deposit accounts. Resolves the member, verifies identity, issues a step-up auth challenge before any money moves (GLBA + FFIEC MFA), runs the policy check against daily limit and account standing, then executes the atomic debit/credit pair via SymXchange. Escalates to officer callback if step-up auth can't be delivered.",
     triggerIntents: ['transfer_funds'],
     steps: [
+      {
+        skillId: 'skill-call-auth',
+        displayName: 'Call Authentication',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Voice channel only: ANI check + DTMF PIN before any member data is accessed',
+          autoExecute: true,
+        },
+      },
       {
         skillId: 'skill-member-lookup',
         humanInTheLoop: false,
@@ -233,6 +269,15 @@ export const workflows: Workflow[] = [
       'Handles inbound balance and recent-transaction inquiries. Resolves the member, verifies identity, retrieves account balances, and surfaces the last few transactions for the officer to read back.',
     triggerIntents: ['balance_inquiry'],
     steps: [
+      {
+        skillId: 'skill-call-auth',
+        displayName: 'Call Authentication',
+        humanInTheLoop: false,
+        guardrails: {
+          condition: 'Voice channel only: ANI check + DTMF PIN before any member data is accessed',
+          autoExecute: true,
+        },
+      },
       {
         skillId: 'skill-member-lookup',
         humanInTheLoop: false,

@@ -9,7 +9,7 @@ import { TriggerModal } from "@/components/TriggerModal";
 import { useDemoController } from "@/lib/hooks/useDemoController";
 
 export default function Home() {
-  const { state, sendTrigger, confirmOffer, modifyOffer, reset } =
+  const { state, sendTrigger, confirmOffer, modifyOffer, approveQueueItem, declineQueueItem, reset } =
     useDemoController();
   const [triggerOpen, setTriggerOpen] = useState(false);
 
@@ -30,7 +30,11 @@ export default function Home() {
         />
 
         <main className="flex-1 grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] min-h-0 bg-[color:color-mix(in_oklch,var(--color-surface-page)_88%,white)]">
-          <MissionControlPane state={state} />
+          <MissionControlPane
+            state={state}
+            onApproveQueueItem={approveQueueItem}
+            onDeclineQueueItem={declineQueueItem}
+          />
           <CopilotPane
             state={state}
             onConfirm={confirmOffer}

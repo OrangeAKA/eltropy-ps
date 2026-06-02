@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CatalogTab } from "@/components/mission-control/CatalogTab";
 import { ComposerTab } from "@/components/mission-control/ComposerTab";
 import { RuntimeTab } from "@/components/mission-control/RuntimeTab";
+import { PendingActionsQueue } from "@/components/mission-control/PendingActionsQueue";
 import {
   CatalogGlyph,
   ComposerGlyph,
@@ -14,9 +15,11 @@ import type { DemoState } from "@/lib/types";
 
 type Props = {
   state: DemoState;
+  onApproveQueueItem: (itemId: string) => void;
+  onDeclineQueueItem: (itemId: string) => void;
 };
 
-export function MissionControlPane({ state }: Props) {
+export function MissionControlPane({ state, onApproveQueueItem, onDeclineQueueItem }: Props) {
   const [activeTab, setActiveTab] = useState<string>("composer");
   const prevPhase = useRef(state.phase);
 
@@ -80,6 +83,12 @@ export function MissionControlPane({ state }: Props) {
           </TabsList>
         </Tabs>
       </div>
+
+      <PendingActionsQueue
+        items={state.queuedTransferItems}
+        onApprove={onApproveQueueItem}
+        onDecline={onDeclineQueueItem}
+      />
 
       <div className="flex-1 min-h-0">
         <Tabs value={activeTab} className="h-full">

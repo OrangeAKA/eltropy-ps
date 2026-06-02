@@ -51,6 +51,22 @@ export const triggers: TriggerScenario[] = [
     expectedIntent: 'lending_inquiry',
   },
   {
+    id: 'trigger-007',
+    label: 'Voice Call from Maria Santos — small transfer',
+    channel: 'voice',
+    fromPhone: '+14155559283',
+    body: "Hi, I just need to move $1,500 from my savings over to my checking account. Can you do that for me now?",
+    expectedIntent: 'transfer_funds',
+  },
+  {
+    id: 'trigger-008',
+    label: 'Voice Call from Robert Kim — mid-range transfer',
+    channel: 'voice',
+    fromPhone: '+12135558761',
+    body: "Yeah, hi — I need to transfer $8,000 from my savings account to my checking. I'm making a down payment on something this week and want the funds moved over.",
+    expectedIntent: 'transfer_funds',
+  },
+  {
     id: 'trigger-006',
     label: 'Voice Call from Linda Rodriguez',
     channel: 'voice',

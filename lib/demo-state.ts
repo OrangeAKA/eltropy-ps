@@ -11,6 +11,7 @@ export const initialDemoState: DemoState = {
   context: { skillResults: {} },
   auditLog: [],
   completedSkillIds: [],
+  queuedTransferItems: [],
   conversationMessages: [],
 };
 
@@ -30,6 +31,7 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         },
         auditLog: [],
         completedSkillIds: [],
+        queuedTransferItems: [],
         activeSkillId: undefined,
         awaitingConfirmFor: undefined,
         workflowId: undefined,
@@ -248,6 +250,58 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         auditLog: [...state.auditLog, action.log],
       };
 
+    case "QUEUED_FOR_OFFICER": {
+      const queueMsg = `Your transfer request of $${action.item.amount.toLocaleString()} has been staged for review. You'll receive a confirmation once an officer has approved it.`;
+      return {
+        ...state,
+        phase: "pending_officer_queue",
+        queuedTransferItems: [...state.queuedTransferItems, action.item],
+        context: {
+          ...state.context,
+          transferDetails: state.context.transferDetails
+            ? { ...state.context.transferDetails, queueItemId: action.item.id }
+            : state.context.transferDetails,
+        },
+        auditLog: [...state.auditLog, action.log],
+        conversationMessages: [
+          ...state.conversationMessages,
+          {
+            id: `msg_${Date.now()}`,
+            sender: "system" as const,
+            text: queueMsg,
+            timestamp: Date.now(),
+          },
+        ],
+      };
+    }
+
+    case "OFFICER_QUEUE_ACTION": {
+      const updatedItems = state.queuedTransferItems.map((item) =>
+        item.id === action.itemId ? { ...item, status: action.action === "approve" ? "approved" as const : "declined" as const } : item,
+      );
+      const elapsedMs = state.auditLog[state.auditLog.length - 1]?.elapsedMs ?? 0;
+      const approvedItem = updatedItems.find((i) => i.id === action.itemId);
+      const officerText =
+        action.action === "approve"
+          ? `Posting that transfer now. You'll see the new balances on both accounts within a few seconds.`
+          : `Transfer declined. Member will be notified that the request was not approved.`;
+      return {
+        ...state,
+        phase: "executing_post_confirm",
+        queuedTransferItems: updatedItems,
+        auditLog: [...state.auditLog, action.log],
+        conversationMessages: [
+          ...state.conversationMessages,
+          {
+            id: `msg_${Date.now()}`,
+            sender: "officer" as const,
+            text: officerText,
+            timestamp: Date.now(),
+          },
+        ],
+      };
+    }
+
     case "USER_CONFIRMED": {
       const awaitingSkill = state.awaitingConfirmFor?.skillId;
       const isDispute = awaitingSkill === "skill-dispute-file";
@@ -305,9 +359,16 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
       } else if (intent === "transfer_funds") {
         const t = state.context.transferDetails;
         if (t?.execution) {
-          systemText = `✓ Transfer posted. $${t.execution.amount.toLocaleString()} moved. Confirmation ${t.execution.confirmationNumber}.`;
+          const tier = t.transferTier;
+          const prefix = tier === "autonomous" ? "✓ Transfer processed automatically." : "✓ Transfer posted.";
+          systemText = `${prefix} $${t.execution.amount.toLocaleString()} moved. Confirmation ${t.execution.confirmationNumber}.`;
         } else if (t?.escalated) {
           systemText = `Held for review. ${t.escalationReason ?? "An officer will follow up shortly."}`;
+        } else if (t?.transferTier === "queued") {
+          const declined = state.queuedTransferItems.find((i) => i.id === t.queueItemId && i.status === "declined");
+          systemText = declined
+            ? "Transfer request was not approved by the reviewing officer."
+            : "Transfer cancelled.";
         } else {
           systemText = "Transfer cancelled by officer.";
         }

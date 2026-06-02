@@ -40,6 +40,7 @@ const PHASE_LABEL: Record<DemoState["phase"], string> = {
   routing_workflow: "Routing workflow",
   executing_skill: "Executing workflow",
   awaiting_human_confirm: "Awaiting your approval",
+  pending_officer_queue: "Staged for review",
   executing_post_confirm: "Dispatching offer",
   completed: "Complete",
 };
@@ -158,6 +159,10 @@ export function CopilotSidebar({ state, onConfirm, onModify }: Props) {
                 title={state.awaitingConfirmFor.title}
                 summary={state.awaitingConfirmFor.summary}
               />
+            )}
+
+            {state.phase === "pending_officer_queue" && transfer && (
+              <StagedForQueueSection transfer={transfer} />
             )}
 
             <div className="space-y-2 p-3">
@@ -360,6 +365,31 @@ function AwaitingApprovalSection({
       <p className="mt-1.5 text-[10px] leading-snug text-neutral-500">
         Sarah, the system needs your sign-off before posting. Your officer ID
         + timestamp will be written to the audit log.
+      </p>
+    </section>
+  );
+}
+
+function StagedForQueueSection({ transfer }: { transfer: TransferDetails }) {
+  return (
+    <section className="border-b border-rule bg-[color:color-mix(in_oklch,var(--color-brand-50)_18%,white)] px-3 py-2.5">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <SectionLabel>Officer queue</SectionLabel>
+        <Badge
+          variant="outline"
+          className="h-5 rounded-full border-amber-200 bg-amber-50 px-1.5 text-[9px] uppercase tracking-[0.12em] text-amber-800"
+        >
+          pending review
+        </Badge>
+      </div>
+      <p className="text-xs font-medium text-neutral-900">
+        ${transfer.amount.toLocaleString()} transfer staged
+      </p>
+      <p className="mt-1 text-[11px] leading-relaxed text-neutral-600">
+        {transfer.fromAccountType} → {transfer.toAccountType}. Member authorization is on record. The request is waiting in the officer queue — no funds will move until an officer approves it.
+      </p>
+      <p className="mt-1.5 text-[10px] leading-snug text-neutral-500">
+        Review the queue in Mission Control to approve or decline.
       </p>
     </section>
   );

@@ -11,7 +11,7 @@
 import { useReducer, useRef, useCallback } from "react";
 import { demoReducer, initialDemoState } from "@/lib/demo-state";
 import { handleTrigger } from "@/lib/orchestrator/trigger-handler";
-import type { TriggerEvent, DemoState } from "@/lib/types";
+import type { TriggerEvent, DemoState, QueuedTransferItem } from "@/lib/types";
 
 type ConfirmResolver = {
   resolve: () => void;
@@ -23,10 +23,13 @@ export function useDemoController(): {
   sendTrigger: (trigger: Omit<TriggerEvent, "ingestId" | "receivedAt">) => void;
   confirmOffer: () => void;
   modifyOffer: () => void;
+  approveQueueItem: (itemId: string) => void;
+  declineQueueItem: (itemId: string) => void;
   reset: () => void;
 } {
   const [state, dispatch] = useReducer(demoReducer, initialDemoState);
   const confirmResolverRef = useRef<ConfirmResolver | null>(null);
+  const queueResolverRef = useRef<ConfirmResolver | null>(null);
   const startedAtRef = useRef<number | null>(null);
 
   const sendTrigger = useCallback(
@@ -103,6 +106,19 @@ export function useDemoController(): {
                 log,
               });
             }),
+          awaitQueueAction: (item: QueuedTransferItem) =>
+            new Promise<void>((resolve, reject) => {
+              queueResolverRef.current = { resolve, reject };
+              const log = {
+                id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                timestamp: new Date().toISOString(),
+                elapsedMs: Math.round(performance.now() - startedAt),
+                level: "INFO" as const,
+                component: "workflow.queue",
+                message: `workflow.queue(id=${item.id}) — staged in officer queue`,
+              };
+              dispatch({ type: "QUEUED_FOR_OFFICER", item, log });
+            }),
           onComplete: () => {
             const log = {
               id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -146,12 +162,48 @@ export function useDemoController(): {
     confirmResolverRef.current = null;
   }, []);
 
+  const approveQueueItem = useCallback((itemId: string) => {
+    const elapsedMs = startedAtRef.current
+      ? Math.round(performance.now() - startedAtRef.current)
+      : 0;
+    const log = {
+      id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: new Date().toISOString(),
+      elapsedMs,
+      level: "INFO" as const,
+      component: "human.queue_approve",
+      message: `human.queue_approve(id=${itemId}) — officer approved queued transfer`,
+    };
+    dispatch({ type: "OFFICER_QUEUE_ACTION", itemId, action: "approve", log });
+    queueResolverRef.current?.resolve();
+    queueResolverRef.current = null;
+  }, []);
+
+  const declineQueueItem = useCallback((itemId: string) => {
+    const elapsedMs = startedAtRef.current
+      ? Math.round(performance.now() - startedAtRef.current)
+      : 0;
+    const log = {
+      id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: new Date().toISOString(),
+      elapsedMs,
+      level: "WARN" as const,
+      component: "human.queue_decline",
+      message: `human.queue_decline(id=${itemId}) — officer declined queued transfer`,
+    };
+    dispatch({ type: "OFFICER_QUEUE_ACTION", itemId, action: "decline", log });
+    queueResolverRef.current?.reject();
+    queueResolverRef.current = null;
+  }, []);
+
   const reset = useCallback(() => {
     confirmResolverRef.current?.reject();
     confirmResolverRef.current = null;
+    queueResolverRef.current?.reject();
+    queueResolverRef.current = null;
     startedAtRef.current = null;
     dispatch({ type: "RESET" });
   }, []);
 
-  return { state, sendTrigger, confirmOffer, modifyOffer, reset };
+  return { state, sendTrigger, confirmOffer, modifyOffer, approveQueueItem, declineQueueItem, reset };
 }

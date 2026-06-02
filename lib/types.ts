@@ -115,6 +115,30 @@ export type DisputeDetails = {
 // Transfer (used by stepup-auth + transfer-policy + transfer-execute skills)
 // ────────────────────────────────────────────────────────────────────────────
 
+// Dollar thresholds that gate the three-tier transfer routing model.
+// Below AUTONOMOUS: executes without officer involvement (same risk as online banking).
+// Below QUEUE: stages for async officer queue; member waits for SMS confirmation.
+// At or above QUEUE: requires synchronous officer confirm before posting.
+export const TRANSFER_AUTONOMOUS_THRESHOLD_USD = 2_500;
+export const TRANSFER_QUEUE_THRESHOLD_USD = 25_000;
+
+export type TransferTier = "autonomous" | "queued" | "synchronous";
+
+export type QueuedTransferItem = {
+  id: string;
+  memberId: string;
+  memberName: string;
+  amount: number;
+  fromAccountType: string;
+  toAccountType: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+  authMethod: StepUpAuthResult["method"];
+  policyDecision: TransferPolicyDecision;
+  queuedAt: number;
+  status: "pending" | "approved" | "declined";
+};
+
 export type StepUpAuthResult = {
   method: "verbal_on_voice" | "push_approval" | "sms_otp" | "secure_link";
   approved: boolean;
@@ -158,6 +182,8 @@ export type TransferDetails = {
   execution?: TransferExecutionResult;
   escalated?: boolean;
   escalationReason?: string;
+  transferTier?: TransferTier;
+  queueItemId?: string;
 };
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -212,6 +238,7 @@ export type DemoPhase =
   | "routing_workflow"
   | "executing_skill"
   | "awaiting_human_confirm"
+  | "pending_officer_queue"
   | "executing_post_confirm"
   | "completed";
 
@@ -227,6 +254,7 @@ export type DemoState = {
     title: string;
     summary: string;
   };
+  queuedTransferItems: QueuedTransferItem[];
   workflowId?: string;
   workflowName?: string;
   conversationMessages: ConversationMessage[];
@@ -256,6 +284,13 @@ export type DemoAction =
         offer?: LoanOffer;
         dispute?: DisputeDetails;
       };
+      log: AuditLogEntry;
+    }
+  | { type: "QUEUED_FOR_OFFICER"; item: QueuedTransferItem; log: AuditLogEntry }
+  | {
+      type: "OFFICER_QUEUE_ACTION";
+      itemId: string;
+      action: "approve" | "decline";
       log: AuditLogEntry;
     }
   | { type: "USER_CONFIRMED"; log: AuditLogEntry }
