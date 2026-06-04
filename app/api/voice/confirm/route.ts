@@ -12,6 +12,8 @@ import {
   pushPendingTrigger,
   upsertCallState,
 } from "@/lib/twilio/call-state";
+import { preflightTransfer } from "@/lib/twilio/preflight-transfer";
+import { memberById } from "@/lib/twilio/demo-roster";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -72,7 +74,49 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Confirmed — push the trigger for the browser to pick up.
+  const firstName = (state.selectedMemberName ?? "Member").split(" ")[0];
+
+  // ── Voice-layer preflight for transfers. Catches insufficient funds,
+  //    daily-limit, missing-account, and same-account cases inline so the
+  //    member hears the specific reason while still on the call instead
+  //    of via a text afterward.
+  if (state.intent.intent === "transfer_funds" && state.selectedMemberId) {
+    const member = memberById(state.selectedMemberId);
+    const amount = state.intent.entities.amount as number | undefined;
+    const fromAcct = state.intent.entities.from_account_type as string | undefined;
+    const toAcct = state.intent.entities.to_account_type as string | undefined;
+
+    if (member && typeof amount === "number" && fromAcct && toAcct) {
+      const result = preflightTransfer(member, amount, fromAcct, toAcct);
+      if (!result.allowed) {
+        response.say(
+          { voice: "Polly.Joanna" },
+          `I'm sorry, ${firstName}, but ${result.message}`,
+        );
+        response.pause({ length: 1 });
+        const gather = response.gather({
+          numDigits: 1,
+          action: "/api/voice/transfer-recheck",
+          method: "POST",
+          timeout: 8,
+        });
+        gather.say(
+          { voice: "Polly.Joanna" },
+          "Would you like to try a different amount, or speak with a member services officer? Press 1 to try a different amount, or press 2 for an officer.",
+        );
+        response.say(
+          { voice: "Polly.Joanna" },
+          "Let me get an officer to help you. Please hold.",
+        );
+        response.hangup();
+        return new Response(response.toString(), {
+          headers: { "Content-Type": "text/xml" },
+        });
+      }
+    }
+  }
+
+  // Confirmed AND (for transfers) preflight passed — push the trigger.
   upsertCallState(callSid, { confirmed: true });
   pushPendingTrigger({
     callSid,
@@ -85,7 +129,6 @@ export async function POST(req: NextRequest) {
     createdAt: Date.now(),
   });
 
-  const firstName = (state.selectedMemberName ?? "Member").split(" ")[0];
   const closing = closingForIntent(state.intent.intent, firstName);
   response.say({ voice: "Polly.Joanna" }, closing);
   response.hangup();
