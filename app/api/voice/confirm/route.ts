@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     });
     retryGather.say(
       { voice: "Polly.Joanna" },
-      "No problem. Please tell me how we can help, in a few words.",
+      "No problem. Go ahead and tell me again, in a few words, how I can help.",
     );
     response.hangup();
     return new Response(response.toString(), {
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   if (digits !== "1") {
     response.say(
       { voice: "Polly.Joanna" },
-      "I didn't get that. Hanging up. Please call back to try again.",
+      "I didn't catch that. Please call us back when you're ready and we'll pick up where we left off.",
     );
     response.hangup();
     return new Response(response.toString(), {
@@ -81,13 +81,33 @@ export async function POST(req: NextRequest) {
   });
 
   const firstName = (state.selectedMemberName ?? "Member").split(" ")[0];
-  response.say(
-    { voice: "Polly.Joanna" },
-    `Thanks, ${firstName}. Your request is being processed. The Mission Control screen will show live updates. You'll receive a confirmation message shortly. Goodbye.`,
-  );
+  const closing = closingForIntent(state.intent.intent, firstName);
+  response.say({ voice: "Polly.Joanna" }, closing);
   response.hangup();
 
   return new Response(response.toString(), {
     headers: { "Content-Type": "text/xml" },
   });
+}
+
+function closingForIntent(intent: string, firstName: string): string {
+  switch (intent) {
+    case "transfer_funds":
+      return `Got it, ${firstName}. I'm getting that transfer started right now. You'll get a confirmation text in just a moment. Thanks for calling Cyprus Credit Union.`;
+
+    case "balance_inquiry":
+      return `No problem, ${firstName}. I'll text you the balances in just a moment. Thanks for calling Cyprus Credit Union.`;
+
+    case "card_dispute":
+      return `Sorry to hear that, ${firstName}. I'm filing the dispute right now and an officer will reach out shortly to walk through the next steps. You'll get a text confirmation in just a moment. Thanks for calling Cyprus Credit Union.`;
+
+    case "lending_inquiry":
+      return `Sure, ${firstName}. I'll start looking at loan options for you, and a member services officer will reach out shortly with your pre-qualified rates. Thanks for calling Cyprus Credit Union.`;
+
+    case "refinance_inquiry":
+      return `Got it, ${firstName}. I'll start comparing rates against your existing loan, and an officer will follow up shortly with what we can offer. Thanks for calling Cyprus Credit Union.`;
+
+    default:
+      return `Thanks, ${firstName}. I'm getting a member services officer to help with that. They'll be in touch with you shortly. Thanks for calling Cyprus Credit Union.`;
+  }
 }

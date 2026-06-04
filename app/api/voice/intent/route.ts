@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     });
     retryGather.say(
       { voice: "Polly.Joanna" },
-      "I didn't quite catch that. Please tell me how we can help in a few words.",
+      "Sorry, I didn't quite catch that. Could you tell me again, in a few words, how I can help?",
     );
     response.hangup();
     return new Response(response.toString(), {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   if (!state || !state.selectedMemberPhone) {
     response.say(
       { voice: "Polly.Joanna" },
-      "Your session has expired. Please call back to start over.",
+      "It looks like the call has timed out. Please call us back and we'll pick up where we left off.",
     );
     response.hangup();
     return new Response(response.toString(), {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   upsertCallState(callSid, { transcript, intent });
 
   const readback = readbackText(intent, transcript);
-  response.say({ voice: "Polly.Joanna" }, `I heard the following. ${readback}`);
+  response.say({ voice: "Polly.Joanna" }, `Just to confirm — ${readback}`);
   response.pause({ length: 1 });
 
   const confirmGather = response.gather({
@@ -78,12 +78,12 @@ export async function POST(req: NextRequest) {
   });
   confirmGather.say(
     { voice: "Polly.Joanna" },
-    "If that's correct, press 1 to proceed. Press 2 to try again.",
+    "Press 1 if that's right, or press 2 to start over.",
   );
 
   response.say(
     { voice: "Polly.Joanna" },
-    "No response received. Hanging up.",
+    "I didn't hear a response. Let me get a member services officer to help. Please hold.",
   );
   response.hangup();
 
@@ -101,29 +101,29 @@ function readbackText(intent: IntentClassification, transcript: string): string 
   switch (intent.intent) {
     case "transfer_funds":
       if (amount && from && to) {
-        return `You'd like to transfer ${spellAmount(amount)} from your ${from} account to your ${to} account.`;
+        return `you want to transfer ${spellAmount(amount)} from your ${from} account to your ${to} account.`;
       }
       if (amount) {
-        return `You'd like to move ${spellAmount(amount)} between your accounts.`;
+        return `you want to move ${spellAmount(amount)} between your accounts.`;
       }
-      return "You'd like to transfer funds between your accounts.";
+      return "you want to transfer funds between your accounts.";
 
     case "balance_inquiry":
-      return "You'd like to check your account balance.";
+      return "you want to check your account balance.";
 
     case "card_dispute":
-      if (amount) return `You'd like to dispute a charge of ${spellAmount(amount)} on your card.`;
-      return "You'd like to dispute a charge on your card.";
+      if (amount) return `you want to dispute a charge of ${spellAmount(amount)} on your card.`;
+      return "you want to dispute a charge on your card.";
 
     case "lending_inquiry":
-      if (amount) return `You'd like to apply for a loan of ${spellAmount(amount)}.`;
-      return "You'd like to apply for a new loan.";
+      if (amount) return `you're interested in a loan of about ${spellAmount(amount)}.`;
+      return "you're interested in applying for a new loan.";
 
     case "refinance_inquiry":
-      return "You'd like to refinance an existing loan.";
+      return "you'd like to refinance an existing loan.";
 
     default:
-      return `You said: "${transcript}". I'll route this to an officer.`;
+      return `you said: "${transcript}". I'll get a member services officer to help with that.`;
   }
 }
 

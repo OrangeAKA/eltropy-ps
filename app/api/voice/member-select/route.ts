@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   const firstName = entry.fullName.split(" ")[0];
   response.say(
     { voice: "Polly.Joanna" },
-    `Thanks, ${firstName}. Your call has been authenticated. The system is now ready to take your request.`,
+    `Hi ${firstName}, thanks for calling Cyprus Credit Union. This call is recorded for quality.`,
   );
   response.pause({ length: 1 });
 
@@ -63,12 +63,12 @@ export async function POST(req: NextRequest) {
   });
   intentGather.say(
     { voice: "Polly.Joanna" },
-    "In a few words, how can we help you today? You can ask about your account balance, move money between your accounts, dispute a card charge, or ask about a loan.",
+    "How can I help you today? You can ask about your accounts, move money between them, dispute a charge, or ask about a loan.",
   );
 
   response.say(
     { voice: "Polly.Joanna" },
-    "I didn't catch that. Please call back when you're ready. Goodbye.",
+    "I didn't catch that. Let me transfer you to a member services officer. Please hold.",
   );
   response.hangup();
 

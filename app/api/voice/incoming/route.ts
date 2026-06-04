@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const response = new twilio.twiml.VoiceResponse();
   response.say(
     { voice: "Polly.Joanna" },
-    "Thank you for calling Cyprus Credit Union. This call is recorded for quality and compliance.",
+    "Welcome. To get started, please select a sample member account.",
   );
   response.pause({ length: 1 });
 
@@ -38,14 +38,11 @@ export async function POST(req: NextRequest) {
     timeout: 8,
   });
   const choices = DEMO_ROSTER.map((r) => `Press ${r.digit} for ${r.fullName}`).join(". ");
-  gather.say(
-    { voice: "Polly.Joanna" },
-    `For this demo, please choose the member you're calling as. ${choices}.`,
-  );
+  gather.say({ voice: "Polly.Joanna" }, `${choices}.`);
 
   response.say(
     { voice: "Polly.Joanna" },
-    "No selection received. Please call back when you're ready. Goodbye.",
+    "I didn't get a selection. Please call back when you're ready. Goodbye.",
   );
   response.hangup();
 
