@@ -6,6 +6,7 @@ import { Play, RotateCcw } from "lucide-react";
 import { EltropyMark } from "@/components/shared/EltropyMark";
 import { VendorMonogram } from "@/components/shared/VendorMonogram";
 import { ArchitectureDialog } from "@/components/ArchitectureDialog";
+import { VoiceCallButton } from "@/components/VoiceCallButton";
 
 type Props = {
   onTriggerClick: () => void;
@@ -107,6 +108,7 @@ export function AppHeader({ onTriggerClick, onReset, isActive, pristine }: Props
           How it works
         </Button>
         <ArchitectureDialog open={archOpen} onOpenChange={setArchOpen} />
+        <VoiceCallButton />
         <Button
           onClick={onReset}
           variant="ghost"

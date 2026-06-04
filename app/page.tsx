@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
 import { MissionControlPane } from "@/components/mission-control/MissionControlPane";
@@ -8,10 +8,49 @@ import { CopilotPane } from "@/components/copilot/CopilotPane";
 import { TriggerModal } from "@/components/TriggerModal";
 import { useDemoController } from "@/lib/hooks/useDemoController";
 
+type PolledTrigger = {
+  callSid: string;
+  channel: "voice";
+  fromPhone: string;
+  body: string;
+  memberName: string;
+};
+
 export default function Home() {
   const { state, sendTrigger, confirmOffer, modifyOffer, approveQueueItem, declineQueueItem, reset } =
     useDemoController();
   const [triggerOpen, setTriggerOpen] = useState(false);
+  const seenCallSids = useRef<Set<string>>(new Set());
+
+  // Poll /api/voice/poll for confirmed inbound calls. When a new one
+  // arrives, fire sendTrigger() so the existing demo pipeline runs
+  // against the live call payload.
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch("/api/voice/poll", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { trigger: PolledTrigger | null };
+        if (cancelled || !data.trigger) return;
+        if (seenCallSids.current.has(data.trigger.callSid)) return;
+        seenCallSids.current.add(data.trigger.callSid);
+        sendTrigger({
+          channel: data.trigger.channel,
+          fromPhone: data.trigger.fromPhone,
+          body: data.trigger.body,
+        });
+      } catch {
+        // network blip — try again next tick
+      }
+    };
+    const interval = setInterval(tick, 1500);
+    void tick();
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [sendTrigger]);
 
   const isActive = state.phase !== "idle";
   // Pristine = no trigger has ever been sent in this session. The halo on the
