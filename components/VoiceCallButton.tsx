@@ -194,12 +194,25 @@ export function VoiceCallButton({ disabled }: Props) {
       )}
 
       {status === "error" && errorMsg && (
-        <span
-          className="text-[10px] text-rose-700 max-w-[200px] truncate"
-          title={errorMsg}
-        >
-          {errorMsg}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="text-[10px] text-rose-700 max-w-[460px] line-clamp-2 leading-tight"
+            title={errorMsg}
+          >
+            {errorMsg}
+          </span>
+          <Button
+            onClick={() => {
+              setStatus("idle");
+              setErrorMsg(null);
+            }}
+            size="sm"
+            variant="outline"
+            className="h-6 px-2 text-[10px]"
+          >
+            Retry
+          </Button>
+        </div>
       )}
     </div>
   );
