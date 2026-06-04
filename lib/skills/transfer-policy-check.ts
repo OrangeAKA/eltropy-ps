@@ -16,6 +16,7 @@ export const SKILL_ID = "skill-transfer-policy-check";
 export const ADAPTER_NAME = "SymitarSymXchange-mock";
 
 const DAILY_LIMIT_USD = 50_000;
+const MIN_TRANSFER_AMOUNT_USD = 1;
 // Synthesized "already used today" so the demo always passes for the
 // canonical $10K case but a $50K request would trip the limit.
 const DAILY_USED_USD = 0;
@@ -48,6 +49,18 @@ export async function executeTransferPolicyCheck(
   const blocks: string[] = [];
   const citations: string[] = [];
 
+  if (!Number.isFinite(inputs.amount) || inputs.amount < MIN_TRANSFER_AMOUNT_USD) {
+    blocks.push(
+      `Invalid transfer amount: $${inputs.amount.toLocaleString()} (minimum $${MIN_TRANSFER_AMOUNT_USD})`,
+    );
+    citations.push("CU-POL-TRF-005 minimum-amount required");
+  }
+  if (inputs.fromAccountType === inputs.toAccountType) {
+    blocks.push(
+      `Source and destination cannot be the same account type (${inputs.fromAccountType})`,
+    );
+    citations.push("CU-POL-TRF-003 distinct-accounts required");
+  }
   if (!from) {
     blocks.push(`No ${inputs.fromAccountType} account on file`);
     citations.push("CU-POL-TRF-001 source account required");
@@ -84,7 +97,7 @@ export async function executeTransferPolicyCheck(
     blocks,
     citations,
     rationale: allowed
-      ? `Transfer $${inputs.amount.toLocaleString()} ${inputs.fromAccountType} → ${inputs.toAccountType} cleared 4 policy checks. Daily used $${DAILY_USED_USD.toLocaleString()} of $${DAILY_LIMIT_USD.toLocaleString()}.`
+      ? `Transfer $${inputs.amount.toLocaleString()} ${inputs.fromAccountType} → ${inputs.toAccountType} cleared all policy checks. Daily used $${DAILY_USED_USD.toLocaleString()} of $${DAILY_LIMIT_USD.toLocaleString()}.`
       : `Transfer blocked by ${blocks.length} rule${blocks.length === 1 ? "" : "s"}: ${blocks.join("; ")}`,
   };
 

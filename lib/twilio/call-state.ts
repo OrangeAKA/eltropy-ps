@@ -19,6 +19,9 @@ export type CallState = {
   intent?: IntentClassification;
   confirmed?: boolean;
   pickedUpByBrowser?: boolean;
+  // How many times we've re-prompted for missing slots on this call.
+  // Capped to avoid infinite loops; escalate to officer after limit.
+  slotFillAttempts?: number;
   createdAt: number;
   updatedAt: number;
 };

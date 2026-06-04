@@ -36,8 +36,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (digits === "2") {
-    // Re-prompt for intent
-    upsertCallState(callSid, { transcript: undefined, intent: undefined });
+    // Re-prompt for intent — clear the slot-fill counter so the member
+    // gets a fresh window of follow-ups on the restated request.
+    upsertCallState(callSid, {
+      transcript: undefined,
+      intent: undefined,
+      slotFillAttempts: 0,
+    });
     const retryGather = response.gather({
       input: ["speech"],
       action: "/api/voice/intent",

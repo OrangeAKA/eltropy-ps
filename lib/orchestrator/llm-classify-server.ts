@@ -110,3 +110,75 @@ function normalizeIntent(raw?: string): IntentName {
   if (raw && (allowed as string[]).includes(raw)) return raw as IntentName;
   return "general_handoff";
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Slot extraction — used by the voice IVR when re-prompting the member
+// for a missing field (e.g. "How much would you like to transfer?")
+//
+// Returns the merged entities map, preserving anything we already knew
+// and overlaying anything the model could pull from the new utterance.
+// ────────────────────────────────────────────────────────────────────────────
+
+const SLOT_EXTRACT_SYSTEM = `You are a slot-extraction assistant for a US credit union's member-service AI. The member's primary intent is already known. Your job is to extract the SPECIFIC named fields from a short follow-up utterance.
+
+Allowed fields and their formats:
+- amount: dollar amount as a positive integer (e.g., 1500 for "fifteen hundred" or "$1,500")
+- from_account_type: "savings" | "checking" | "money_market"
+- to_account_type: "savings" | "checking" | "money_market"
+- merchant: a merchant name as it appears on a statement
+- transaction_date: ISO date or natural-language date reference
+- card_last4: last 4 digits of a card
+- product: "auto_loan" | "mortgage" | "heloc" | "credit_card" | "personal_loan"
+- vehicle_year: 4-digit integer year
+- term_months: integer months (assume 60 for "5 years", 72 for "6 years")
+
+Return ONLY a JSON object containing the fields you can confidently extract from the utterance. Omit any field you cannot extract with confidence. Do not invent values. If the utterance does not contain any of the requested fields, return {}.
+
+Return raw JSON only, no preamble, no markdown.`;
+
+export async function extractSlotsServer(args: {
+  utterance: string;
+  intent: IntentName;
+  missingSlots: string[];
+  knownEntities: Record<string, unknown>;
+}): Promise<Record<string, unknown>> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return {};
+  const trimmed = args.utterance.trim();
+  if (!trimmed) return {};
+
+  const client = new Anthropic({ apiKey });
+
+  const userPrompt = `Intent: ${args.intent}
+Already known: ${JSON.stringify(args.knownEntities)}
+Missing fields: ${args.missingSlots.join(", ")}
+Member said: "${trimmed}"
+
+Extract any of the missing fields you can confidently identify in the utterance.`;
+
+  try {
+    const response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 200,
+      system: SLOT_EXTRACT_SYSTEM,
+      messages: [{ role: "user", content: userPrompt }],
+    });
+
+    const textBlock = response.content.find((b) => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") return {};
+
+    const raw = textBlock.text.trim();
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return {};
+
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+      return parsed;
+    } catch {
+      return {};
+    }
+  } catch (err) {
+    console.warn("[llm-classify-server] slot extraction error:", err);
+    return {};
+  }
+}
