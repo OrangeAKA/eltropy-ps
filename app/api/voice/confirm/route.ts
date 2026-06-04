@@ -98,16 +98,19 @@ export async function POST(req: NextRequest) {
 function closingForIntent(intent: string, firstName: string): string {
   switch (intent) {
     case "transfer_funds":
-      return `Got it, ${firstName}. I'm getting that transfer started right now. You'll get a confirmation text in just a moment. Thanks for calling Cyprus Credit Union.`;
+      // Honest about uncertainty: the policy check hasn't run yet. The
+      // member will get a text once the result is known — success,
+      // queued for officer review, or held with a reason.
+      return `Got it, ${firstName}. I'm running the checks on that request right now. You'll get a text in just a moment confirming the result. Thanks for calling Cyprus Credit Union.`;
 
     case "balance_inquiry":
       return `No problem, ${firstName}. I'll text you the balances in just a moment. Thanks for calling Cyprus Credit Union.`;
 
     case "card_dispute":
-      return `Sorry to hear that, ${firstName}. I'm filing the dispute right now and an officer will reach out shortly to walk through the next steps. You'll get a text confirmation in just a moment. Thanks for calling Cyprus Credit Union.`;
+      return `Sorry to hear that, ${firstName}. I'm running the dispute through our review process now, and an officer will reach out shortly to walk through the next steps. Thanks for calling Cyprus Credit Union.`;
 
     case "lending_inquiry":
-      return `Sure, ${firstName}. I'll start looking at loan options for you, and a member services officer will reach out shortly with your pre-qualified rates. Thanks for calling Cyprus Credit Union.`;
+      return `Sure, ${firstName}. I'll start looking at loan options for you, and a member services officer will reach out shortly with what you qualify for. Thanks for calling Cyprus Credit Union.`;
 
     case "refinance_inquiry":
       return `Got it, ${firstName}. I'll start comparing rates against your existing loan, and an officer will follow up shortly with what we can offer. Thanks for calling Cyprus Credit Union.`;
