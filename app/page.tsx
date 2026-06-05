@@ -222,25 +222,30 @@ export default function Home() {
         />
 
         {/* Main area. Both perspectives are always mounted; we just hide
-            the inactive one. This keeps the VoiceCallButton's Twilio
-            Device alive across toggles so the call audio persists. */}
-        <main className="flex-1 relative min-h-0 bg-[color:color-mix(in_oklch,var(--color-surface-page)_88%,white)]">
+            the inactive one via display: none. Keeps the VoiceCallButton's
+            Twilio Device alive across toggles so the call audio persists,
+            but lets each view participate in normal flex/grid layout when
+            visible — so internal scroll containers and the sticky footer
+            below behave correctly. */}
+        <main className="flex-1 min-h-0 flex bg-[color:color-mix(in_oklch,var(--color-surface-page)_88%,white)]">
           {/* Member perspective */}
           <div
             className={cn(
-              "absolute inset-0",
-              perspective === "member" ? "block" : "hidden",
+              "flex-1 min-h-0",
+              perspective === "member" ? "flex" : "hidden",
             )}
             aria-hidden={perspective !== "member"}
           >
-            <MemberView state={state} memberName={lastCallerName} />
+            <div className="flex-1 min-h-0">
+              <MemberView state={state} memberName={lastCallerName} />
+            </div>
           </div>
 
           {/* Cockpit perspective */}
           <div
             className={cn(
-              "absolute inset-0 grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] min-h-0",
-              perspective === "cockpit" ? "grid" : "hidden",
+              "flex-1 min-h-0 grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]",
+              perspective === "cockpit" ? "" : "hidden",
             )}
             aria-hidden={perspective !== "cockpit"}
           >
