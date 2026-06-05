@@ -44,6 +44,29 @@
   --color-rule:         oklch(0.920 0.008 195);
   --color-rule-strong:  oklch(0.880 0.012 195);
 
+  /* Status palette. Hue families chosen to coexist with brand teal:
+     ok lives in the green-teal family (165), pending in warm amber (65),
+     info in muted slate (240). Destructive already declared in :root.
+     Used for: officer queue states, pending hold tints, outcome chips. */
+  --color-status-ok:         oklch(0.560 0.080 165);
+  --color-status-ok-fg:      oklch(0.995 0.003 165);
+  --color-status-pending:    oklch(0.720 0.130 65);
+  --color-status-pending-fg: oklch(0.250 0.015 65);
+  --color-status-info:       oklch(0.620 0.025 240);
+  --color-status-info-fg:    oklch(0.995 0.003 240);
+
+  /* Member surface tokens. Slightly more lift than the cockpit, softer
+     hairlines. Same hue family so the two surfaces feel related but the
+     consumer side breathes. */
+  --color-member-bg:   oklch(0.992 0.004 195);
+  --color-member-card: oklch(1.000 0.002 195);
+  --color-member-rule: oklch(0.940 0.006 195);
+
+  /* Signature motion. Spotlight expand/collapse for the split layout, and
+     the call-landed pulse choreographed across both surfaces. */
+  --duration-spotlight: 320ms;
+  --duration-pulse:     600ms;
+
   --font-sans:
     var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -196,6 +219,14 @@
 @keyframes indeterminate {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
+}
+
+/* Pulse for the MemberStatusWidget indicator dot when a call is active.
+   Subtle: rings outward and fades. Uses ease-out-quint for the natural
+   deceleration we lock in DESIGN.md. */
+@keyframes memberWidgetPulse {
+  0%   { transform: scale(1);   opacity: 0.65; }
+  100% { transform: scale(2.4); opacity: 0;    }
 }
 
 @media (prefers-reduced-motion: reduce) {

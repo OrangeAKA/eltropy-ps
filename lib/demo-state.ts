@@ -401,6 +401,37 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
         auditLog: [...state.auditLog, action.log],
       };
 
+    case "VOICE_LIVE_EVENT": {
+      // Live IVR events surface mid-call so Mission Control shows
+      // activity while the member is still on the phone. Always
+      // appends to the audit log. The optional phaseHint advances
+      // the demo phase, but only forward — never regresses if the
+      // real workflow has already moved past this point.
+      const nextLog = [...state.auditLog, action.log];
+      if (!action.phaseHint) {
+        return { ...state, auditLog: nextLog };
+      }
+      const rank: Record<typeof state.phase, number> = {
+        idle: 0,
+        ingesting: 1,
+        resolving_member: 2,
+        classifying_intent: 3,
+        routing_workflow: 4,
+        executing_skill: 5,
+        awaiting_human_confirm: 6,
+        pending_officer_queue: 6,
+        executing_post_confirm: 7,
+        completed: 8,
+      };
+      const shouldAdvance = rank[action.phaseHint] > rank[state.phase];
+      return {
+        ...state,
+        auditLog: nextLog,
+        phase: shouldAdvance ? action.phaseHint : state.phase,
+        startedAt: state.startedAt ?? performance.now(),
+      };
+    }
+
     default:
       return state;
   }

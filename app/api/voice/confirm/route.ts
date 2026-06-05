@@ -14,6 +14,7 @@ import {
 } from "@/lib/twilio/call-state";
 import { preflightTransfer } from "@/lib/twilio/preflight-transfer";
 import { memberById } from "@/lib/twilio/demo-roster";
+import { pushVoiceEvent } from "@/lib/twilio/live-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -118,6 +119,18 @@ export async function POST(req: NextRequest) {
 
   // Confirmed AND (for transfers) preflight passed — push the trigger.
   upsertCallState(callSid, { confirmed: true });
+
+  // Surface the confirmation to Mission Control before the trigger
+  // post-call. Lets the cockpit show "request confirmed" while the
+  // closing copy is still being spoken, so the demo viewer sees the
+  // moment of confirmation in real time.
+  pushVoiceEvent({
+    type: "request_confirmed",
+    callSid,
+    timestamp: Date.now(),
+    intent: state.intent,
+  });
+
   pushPendingTrigger({
     callSid,
     fromPhone: state.fromPhone,

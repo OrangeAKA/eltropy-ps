@@ -16,6 +16,7 @@
 import { NextRequest } from "next/server";
 import twilio from "twilio";
 import { getCallState, upsertCallState } from "@/lib/twilio/call-state";
+import { pushVoiceEvent } from "@/lib/twilio/live-events";
 import {
   classifyIntentServer,
   extractSlotsServer,
@@ -105,6 +106,19 @@ export async function POST(req: NextRequest) {
   }
 
   upsertCallState(callSid, { transcript, intent });
+
+  // Surface the classifier result to Mission Control so the cockpit
+  // shows the captured intent while the member is still on the call.
+  // Emits on every classification pass (including slot-fill iterations)
+  // so MC reflects the latest understanding of what the member wants.
+  pushVoiceEvent({
+    type: "intent_captured",
+    callSid,
+    timestamp: Date.now(),
+    intent: intent.intent,
+    entities: intent.entities,
+    confidence: intent.confidence,
+  });
 
   // ── Check whether required slots are filled.
   const missing = missingSlotsFor(intent.intent, intent.entities);
