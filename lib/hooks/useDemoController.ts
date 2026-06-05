@@ -11,7 +11,14 @@
 import { useReducer, useRef, useCallback } from "react";
 import { demoReducer, initialDemoState } from "@/lib/demo-state";
 import { handleTrigger } from "@/lib/orchestrator/trigger-handler";
-import type { TriggerEvent, DemoState, QueuedTransferItem } from "@/lib/types";
+import type {
+  TriggerEvent,
+  DemoState,
+  QueuedTransferItem,
+  AuditLogEntry,
+  DemoPhase,
+} from "@/lib/types";
+import type { VoiceLiveEvent } from "@/lib/twilio/live-events";
 
 type ConfirmResolver = {
   resolve: () => void;
@@ -25,6 +32,7 @@ export function useDemoController(): {
   modifyOffer: () => void;
   approveQueueItem: (itemId: string) => void;
   declineQueueItem: (itemId: string) => void;
+  pushVoiceEvent: (event: VoiceLiveEvent) => void;
   reset: () => void;
 } {
   const [state, dispatch] = useReducer(demoReducer, initialDemoState);
@@ -196,6 +204,61 @@ export function useDemoController(): {
     queueResolverRef.current = null;
   }, []);
 
+  // Surface a voice live event into the demo state. Builds an audit
+  // log entry from the event payload and asks the reducer to advance
+  // the phase (forward-only — never regresses if the real workflow
+  // has already moved past this point).
+  const pushVoiceEvent = useCallback((event: VoiceLiveEvent) => {
+    const baseLog: Omit<AuditLogEntry, "message" | "level" | "component"> = {
+      id: `log_${event.timestamp}_${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: new Date(event.timestamp).toISOString(),
+      elapsedMs: startedAtRef.current
+        ? Math.round(performance.now() - startedAtRef.current)
+        : 0,
+    };
+
+    let log: AuditLogEntry;
+    let phaseHint: DemoPhase | undefined;
+
+    switch (event.type) {
+      case "member_identified":
+        log = {
+          ...baseLog,
+          level: "INFO",
+          component: "voice.live",
+          message: `voice.member_identified(name="${event.memberName}", id=${event.memberId})`,
+        };
+        phaseHint = "resolving_member";
+        break;
+      case "intent_captured":
+        log = {
+          ...baseLog,
+          level: "INFO",
+          component: "voice.live",
+          message: `voice.intent_captured(intent=${event.intent}, confidence=${event.confidence.toFixed(2)})`,
+        };
+        phaseHint = "classifying_intent";
+        break;
+      case "request_confirmed":
+        log = {
+          ...baseLog,
+          level: "INFO",
+          component: "voice.live",
+          message: `voice.request_confirmed(intent=${event.intent.intent})`,
+        };
+        // No phase advance — the next event will be the real trigger
+        // arriving via polling and starting the workflow.
+        phaseHint = undefined;
+        break;
+    }
+
+    if (startedAtRef.current == null) {
+      startedAtRef.current = performance.now();
+    }
+
+    dispatch({ type: "VOICE_LIVE_EVENT", log, phaseHint });
+  }, []);
+
   const reset = useCallback(() => {
     confirmResolverRef.current?.reject();
     confirmResolverRef.current = null;
@@ -205,5 +268,14 @@ export function useDemoController(): {
     dispatch({ type: "RESET" });
   }, []);
 
-  return { state, sendTrigger, confirmOffer, modifyOffer, approveQueueItem, declineQueueItem, reset };
+  return {
+    state,
+    sendTrigger,
+    confirmOffer,
+    modifyOffer,
+    approveQueueItem,
+    declineQueueItem,
+    pushVoiceEvent,
+    reset,
+  };
 }

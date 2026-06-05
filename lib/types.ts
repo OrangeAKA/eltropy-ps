@@ -297,4 +297,5 @@ export type DemoAction =
   | { type: "USER_MODIFIED" }
   | { type: "WORKFLOW_COMPLETED"; log: AuditLogEntry }
   | { type: "MESSAGE_APPENDED"; message: ConversationMessage }
-  | { type: "LOG_APPENDED"; log: AuditLogEntry };
+  | { type: "LOG_APPENDED"; log: AuditLogEntry }
+  | { type: "VOICE_LIVE_EVENT"; log: AuditLogEntry; phaseHint?: DemoPhase };

@@ -11,6 +11,7 @@ import { NudgeToast } from "@/components/member/NudgeToast";
 import { useDemoController } from "@/lib/hooks/useDemoController";
 import { cn } from "@/lib/utils";
 import type { TriggerChannel } from "@/lib/types";
+import type { VoiceLiveEvent } from "@/lib/twilio/live-events";
 
 type PolledTrigger = {
   callSid: string;
@@ -30,6 +31,7 @@ export default function Home() {
     modifyOffer,
     approveQueueItem,
     declineQueueItem,
+    pushVoiceEvent,
     reset,
   } = useDemoController();
 
@@ -129,6 +131,34 @@ export default function Home() {
       nudgeFiredForWorkRef.current = false;
     }
   }, [state.phase, perspective, armNudge]);
+
+  // Poll /api/voice/live-events for partial events emitted by the IVR
+  // webhooks while the call is still in progress. Each event surfaces
+  // in Mission Control's audit log immediately — so the cockpit shows
+  // live activity while the member is mid-conversation, before the
+  // call ends and the final trigger arrives.
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch("/api/voice/live-events", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { events: VoiceLiveEvent[] };
+        if (cancelled || !data.events?.length) return;
+        for (const event of data.events) {
+          pushVoiceEvent(event);
+        }
+      } catch {
+        // network blip — try again next tick
+      }
+    };
+    const interval = setInterval(tick, 1500);
+    void tick();
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [pushVoiceEvent]);
 
   // Poll /api/voice/poll for confirmed inbound calls. When a new one
   // arrives, fire the wrapped trigger so the nudge fires alongside.

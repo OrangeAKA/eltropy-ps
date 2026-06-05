@@ -8,6 +8,7 @@ import { NextRequest } from "next/server";
 import twilio from "twilio";
 import { upsertCallState } from "@/lib/twilio/call-state";
 import { rosterByDigit, DEMO_ROSTER } from "@/lib/twilio/demo-roster";
+import { pushVoiceEvent } from "@/lib/twilio/live-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +45,18 @@ export async function POST(req: NextRequest) {
     selectedMemberId: entry.memberId,
     selectedMemberPhone: entry.phone,
     selectedMemberName: entry.fullName,
+  });
+
+  // Surface to Mission Control immediately so the activity feed shows
+  // that the member has been resolved while the call is still in
+  // progress — the cockpit lights up before the call ends.
+  pushVoiceEvent({
+    type: "member_identified",
+    callSid,
+    timestamp: Date.now(),
+    memberId: entry.memberId,
+    memberName: entry.fullName,
+    memberPhone: entry.phone,
   });
 
   const firstName = entry.fullName.split(" ")[0];
