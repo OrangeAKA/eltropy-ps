@@ -1,12 +1,15 @@
 "use client";
 
 import { PhoneFrame } from "./PhoneFrame";
-import { VoiceCallButton } from "@/components/VoiceCallButton";
+import { VoiceCallButton, type CallStatus } from "@/components/VoiceCallButton";
 import type { DemoState } from "@/lib/types";
 
 interface MemberViewProps {
   state: DemoState;
   memberName?: string;
+  // Bubbled up so the page-level shell can react to call lifecycle
+  // (used to time the directorial nudge mid-call).
+  onCallStatusChange?: (status: CallStatus) => void;
 }
 
 // The Cyprus CU member surface. Lives inside a PhoneFrame to read as a
@@ -17,7 +20,11 @@ interface MemberViewProps {
 // During an active call the VoiceCallButton itself expands into the
 // dialer + DTMF + hang-up controls. The cards below the call control
 // reflect the durable outcome state from the demo controller.
-export function MemberView({ state, memberName }: MemberViewProps) {
+export function MemberView({
+  state,
+  memberName,
+  onCallStatusChange,
+}: MemberViewProps) {
   const firstName = memberName?.split(" ")[0];
   const onCall = state.phase !== "idle";
 
@@ -37,7 +44,7 @@ export function MemberView({ state, memberName }: MemberViewProps) {
 
       {/* Primary action — the call itself */}
       <section className="mb-5">
-        <VoiceCallButton />
+        <VoiceCallButton onStatusChange={onCallStatusChange} />
       </section>
 
       {/* Contextual status — adapts to what's happening in the system.

@@ -6,7 +6,7 @@ import { Phone, PhoneOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type CallStatus =
+export type CallStatus =
   | "idle"
   | "fetching_token"
   | "registering"
@@ -17,6 +17,10 @@ type CallStatus =
 
 type Props = {
   disabled?: boolean;
+  // Fires whenever the internal status transitions. Lets the page-level
+  // shell react to call lifecycle events (e.g., arm the directorial
+  // nudge once the call is mid-conversation).
+  onStatusChange?: (status: CallStatus) => void;
 };
 
 // Hero-style call button hosted inside the member's PhoneFrame. The
@@ -24,11 +28,17 @@ type Props = {
 // primary CTA. When a call is active it expands into a stacked control
 // panel (status pill + DTMF keypad + hang up), all sized for the ~340px
 // phone interior width.
-export function VoiceCallButton({ disabled }: Props) {
+export function VoiceCallButton({ disabled, onStatusChange }: Props) {
   const [status, setStatus] = useState<CallStatus>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
+
+  // Surface status transitions to the parent so the page can react to
+  // call lifecycle (used to fire the directorial nudge mid-call).
+  useEffect(() => {
+    onStatusChange?.(status);
+  }, [status, onStatusChange]);
 
   // Cleanup on unmount. With the perspective toggle pattern, this
   // component stays mounted across view switches (both views render

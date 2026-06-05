@@ -44,12 +44,17 @@ export default function Home() {
     undefined,
   );
 
-  // Nudge that prompts the viewer to switch to Mission Control once the
-  // system starts visible processing. Fires once per call (re-arms on
-  // reset). Auto-dismisses if the viewer doesn't act.
+  // Nudge that prompts the viewer to switch to Mission Control the
+  // moment MC starts doing visible work. Tied to state.phase rather
+  // than to a timer — fires only when there's genuinely something to
+  // see in the cockpit. Auto-dismisses if the viewer doesn't act.
   const [nudgeVisible, setNudgeVisible] = useState(false);
-  const nudgeFiredForCallRef = useRef(false);
+  const nudgeFiredForWorkRef = useRef(false);
   const nudgeTimerRef = useRef<number | null>(null);
+
+  // Track the previous phase so we can detect the transition from
+  // "idle" → "doing real work" and only fire the nudge on that edge.
+  const prevPhaseRef = useRef(state.phase);
 
   const seenCallSids = useRef<Set<string>>(new Set());
 
@@ -62,8 +67,8 @@ export default function Home() {
   }, []);
 
   const armNudge = useCallback(() => {
-    if (nudgeFiredForCallRef.current) return;
-    nudgeFiredForCallRef.current = true;
+    if (nudgeFiredForWorkRef.current) return;
+    nudgeFiredForWorkRef.current = true;
     setNudgeVisible(true);
     if (nudgeTimerRef.current != null) {
       window.clearTimeout(nudgeTimerRef.current);
@@ -87,9 +92,8 @@ export default function Home() {
     handlePerspectiveChange("cockpit");
   }, [handlePerspectiveChange]);
 
-  // Wrap sendTrigger so we also arm the directorial nudge. When a real
-  // call lands via polling OR a manual trigger fires, the system starts
-  // visible work that the viewer should watch from the cockpit.
+  // sendTrigger fires when a real call lands (via polling) or when the
+  // dev-side Send Trigger button injects a simulated trigger.
   const handleSendTrigger = useCallback(
     (payload: {
       channel: TriggerChannel;
@@ -97,10 +101,34 @@ export default function Home() {
       body: string;
     }) => {
       sendTrigger(payload);
-      armNudge();
     },
-    [sendTrigger, armNudge],
+    [sendTrigger],
   );
+
+  // Fire the nudge precisely when Mission Control actually starts
+  // doing visible work — i.e., on the transition from "idle" to any
+  // active phase (classifying, dispatching, awaiting confirm, etc.).
+  // Resets when the system returns to idle so the next call gets a
+  // fresh nudge.
+  useEffect(() => {
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = state.phase;
+
+    const wasIdle = prev === "idle";
+    const nowActive = state.phase !== "idle";
+
+    if (wasIdle && nowActive) {
+      // Mission Control just lit up. Nudge only if the viewer is on
+      // the member side — if they're already in the cockpit, they're
+      // already watching the work happen.
+      if (perspective === "member") {
+        armNudge();
+      }
+    } else if (!wasIdle && state.phase === "idle") {
+      // Returned to idle. Reset for the next call.
+      nudgeFiredForWorkRef.current = false;
+    }
+  }, [state.phase, perspective, armNudge]);
 
   // Poll /api/voice/poll for confirmed inbound calls. When a new one
   // arrives, fire the wrapped trigger so the nudge fires alongside.
@@ -153,7 +181,8 @@ export default function Home() {
           onTriggerClick={() => setTriggerOpen(true)}
           onReset={() => {
             reset();
-            nudgeFiredForCallRef.current = false;
+            nudgeFiredForWorkRef.current = false;
+            prevPhaseRef.current = "idle";
             dismissNudge();
             setLastCallerName(undefined);
             setPerspective("member");
