@@ -19,13 +19,20 @@ type Props = {
   disabled?: boolean;
 };
 
+// Hero-style call button hosted inside the member's PhoneFrame. The
+// member side is where the call originates; this component is the
+// primary CTA. When a call is active it expands into a stacked control
+// panel (status pill + DTMF keypad + hang up), all sized for the ~340px
+// phone interior width.
 export function VoiceCallButton({ disabled }: Props) {
   const [status, setStatus] = useState<CallStatus>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
 
-  // Cleanup on unmount
+  // Cleanup on unmount. With the perspective toggle pattern, this
+  // component stays mounted across view switches (both views render
+  // and toggle visibility via CSS), so the call survives toggling.
   useEffect(() => {
     return () => {
       try {
@@ -119,101 +126,142 @@ export function VoiceCallButton({ disabled }: Props) {
   const isLive = status === "in_call" || status === "calling";
   const isBusy = status === "fetching_token" || status === "registering";
 
-  return (
-    <div className="flex items-center gap-1.5">
-      {!isLive && status !== "ended" && (
-        <Button
-          onClick={startCall}
-          disabled={disabled || isBusy}
-          size="sm"
-          className={cn(
-            "h-8 gap-1.5",
-            "bg-[oklch(0.62_0.16_150)] hover:bg-[oklch(0.55_0.18_150)] text-white",
-          )}
-          title="Place a browser call to the Cyprus CU demo line"
-        >
-          {isBusy ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Phone className="h-3.5 w-3.5" />
-          )}
-          {isBusy
-            ? status === "fetching_token"
-              ? "Connecting…"
-              : "Registering…"
-            : "Call Cyprus CU"}
-        </Button>
-      )}
+  // ── Idle / busy ── primary CTA
+  if (!isLive && status !== "ended" && status !== "error") {
+    return (
+      <Button
+        onClick={startCall}
+        disabled={disabled || isBusy}
+        size="lg"
+        className={cn(
+          "h-12 w-full gap-2 rounded-2xl text-[14px] font-medium",
+          "bg-[oklch(0.50_0.12_150)] hover:bg-[oklch(0.44_0.13_150)] text-white",
+          "shadow-[0_6px_16px_-8px_color-mix(in_oklch,oklch(0.40_0.12_150)_60%,transparent)]",
+        )}
+      >
+        {isBusy ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Phone className="h-4 w-4" />
+        )}
+        {isBusy
+          ? status === "fetching_token"
+            ? "Connecting…"
+            : "Registering…"
+          : "Talk to Cyprus CU"}
+      </Button>
+    );
+  }
 
-      {isLive && (
-        <>
-          <div className="flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-800">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-600" />
+  // ── Live call ── stacked control panel
+  if (isLive) {
+    return (
+      <div className="flex flex-col gap-3">
+        {/* Call status header */}
+        <div className="flex items-center justify-between rounded-2xl border border-rule bg-[color:var(--color-member-card)] px-3.5 py-2.5">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span
+                className="absolute inline-flex h-full w-full rounded-full opacity-60"
+                style={{
+                  background: "oklch(0.55 0.18 25)",
+                  animation:
+                    "memberWidgetPulse 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite",
+                }}
+              />
+              <span
+                className="relative inline-flex h-2 w-2 rounded-full"
+                style={{ background: "oklch(0.55 0.18 25)" }}
+              />
             </span>
-            {status === "in_call" ? "On call" : "Dialing"}
+            <span className="text-[12px] font-medium text-foreground">
+              {status === "in_call" ? "On call" : "Connecting"}
+            </span>
           </div>
+          <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+            Cyprus CU
+          </span>
+        </div>
 
-          <div className="flex items-center gap-0.5 rounded-md border border-rule bg-white px-1 py-0.5">
-            {["1", "2", "3", "4"].map((d) => (
-              <button
-                key={d}
-                onClick={() => sendDigit(d)}
-                className="h-6 w-6 rounded text-[11px] font-mono text-neutral-700 hover:bg-brand-50 hover:text-brand-700 active:bg-brand-100"
-                title={`Press ${d}`}
-              >
-                {d}
-              </button>
-            ))}
+        {/* DTMF keypad */}
+        <div>
+          <p className="mb-1.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            Touch tone
+          </p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"].map(
+              (d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => sendDigit(d)}
+                  className={cn(
+                    "h-9 rounded-lg border border-rule bg-[color:var(--color-member-card)]",
+                    "font-mono text-[14px] text-foreground",
+                    "transition-colors hover:bg-brand-50 active:bg-brand-100",
+                  )}
+                >
+                  {d}
+                </button>
+              ),
+            )}
           </div>
+        </div>
 
-          <Button
-            onClick={endCall}
-            size="sm"
-            variant="outline"
-            className="h-8 gap-1.5 border-rose-200 text-rose-700 hover:bg-rose-50"
-          >
-            <PhoneOff className="h-3.5 w-3.5" />
-            Hang up
-          </Button>
-        </>
-      )}
-
-      {status === "ended" && (
+        {/* Hang up */}
         <Button
-          onClick={startCall}
-          disabled={disabled || isBusy}
+          onClick={endCall}
           size="sm"
           variant="outline"
-          className="h-8 gap-1.5"
+          className="h-10 gap-1.5 rounded-xl border-rose-200 text-rose-700 hover:bg-rose-50"
         >
-          <Phone className="h-3.5 w-3.5" />
-          Call again
+          <PhoneOff className="h-3.5 w-3.5" />
+          Hang up
         </Button>
-      )}
+      </div>
+    );
+  }
 
-      {status === "error" && errorMsg && (
-        <div className="flex items-center gap-1.5">
-          <span
-            className="text-[10px] text-rose-700 max-w-[460px] line-clamp-2 leading-tight"
-            title={errorMsg}
-          >
-            {errorMsg}
-          </span>
-          <Button
-            onClick={() => {
-              setStatus("idle");
-              setErrorMsg(null);
-            }}
-            size="sm"
-            variant="outline"
-            className="h-6 px-2 text-[10px]"
-          >
-            Retry
-          </Button>
-        </div>
-      )}
-    </div>
-  );
+  // ── Ended ── offer to call again
+  if (status === "ended") {
+    return (
+      <Button
+        onClick={startCall}
+        disabled={disabled || isBusy}
+        size="lg"
+        variant="outline"
+        className="h-12 w-full gap-2 rounded-2xl text-[14px]"
+      >
+        <Phone className="h-4 w-4" />
+        Call again
+      </Button>
+    );
+  }
+
+  // ── Error ──
+  if (status === "error" && errorMsg) {
+    return (
+      <div className="flex flex-col gap-2 rounded-2xl border border-rose-200 bg-rose-50/40 p-3">
+        <p
+          className="text-[11px] leading-relaxed text-rose-800 line-clamp-3"
+          title={errorMsg}
+        >
+          {errorMsg}
+        </p>
+        <Button
+          onClick={() => {
+            setStatus("idle");
+            setErrorMsg(null);
+          }}
+          size="sm"
+          variant="outline"
+          className="h-8 text-[11px]"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  return null;
 }
