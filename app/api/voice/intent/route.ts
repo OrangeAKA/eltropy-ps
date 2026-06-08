@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   const transcript = ((form.get("SpeechResult") as string) ?? "").trim();
 
   const response = new twilio.twiml.VoiceResponse();
-  const state = getCallState(callSid);
+  const state = await getCallState(callSid);
 
   if (!state || !state.selectedMemberPhone) {
     response.say(
@@ -105,13 +105,13 @@ export async function POST(req: NextRequest) {
       };
   }
 
-  upsertCallState(callSid, { transcript, intent });
+  await upsertCallState(callSid, { transcript, intent });
 
   // Surface the classifier result to Mission Control so the cockpit
   // shows the captured intent while the member is still on the call.
   // Emits on every classification pass (including slot-fill iterations)
   // so MC reflects the latest understanding of what the member wants.
-  pushVoiceEvent({
+  await pushVoiceEvent({
     type: "intent_captured",
     callSid,
     timestamp: Date.now(),
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    upsertCallState(callSid, { slotFillAttempts: attempts + 1 });
+    await upsertCallState(callSid, { slotFillAttempts: attempts + 1 });
 
     const prompt = promptForMissingSlots(intent.intent, missing, intent.entities);
     const slotGather = response.gather({

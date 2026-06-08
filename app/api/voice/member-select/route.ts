@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  upsertCallState(callSid, {
+  await upsertCallState(callSid, {
     selectedMemberId: entry.memberId,
     selectedMemberPhone: entry.phone,
     selectedMemberName: entry.fullName,
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   // Surface to Mission Control immediately so the activity feed shows
   // that the member has been resolved while the call is still in
   // progress — the cockpit lights up before the call ends.
-  pushVoiceEvent({
+  await pushVoiceEvent({
     type: "member_identified",
     callSid,
     timestamp: Date.now(),

@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest) {
-  const next = takePendingTrigger();
+  const next = await takePendingTrigger();
   if (!next) {
     return Response.json({ trigger: null }, { headers: { "Cache-Control": "no-store" } });
   }

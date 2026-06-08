@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const callSid = (form.get("CallSid") as string) ?? `local_${Date.now()}`;
   const fromPhone = (form.get("From") as string) ?? "";
 
-  upsertCallState(callSid, {}, { fromPhone });
+  await upsertCallState(callSid, {}, { fromPhone });
 
   const response = new twilio.twiml.VoiceResponse();
 

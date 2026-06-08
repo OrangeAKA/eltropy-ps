@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const speech = ((form.get("SpeechResult") as string) ?? "").trim();
 
   const response = new twilio.twiml.VoiceResponse();
-  const state = getCallState(callSid);
+  const state = await getCallState(callSid);
 
   if (!state || !state.intent || !state.selectedMemberId) {
     response.say(
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
 
     if (typeof newAmount !== "number" || newAmount <= 0) {
       // Couldn't extract — ask once more, or escalate after the cap.
-      upsertCallState(callSid, { slotFillAttempts: retryCount + 1 });
+      await upsertCallState(callSid, { slotFillAttempts: retryCount + 1 });
       const reGather = response.gather({
         input: ["speech"],
         action: "/api/voice/transfer-recheck",
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
       amount: newAmount,
     };
     const updatedIntent = { ...state.intent, entities: updatedEntities };
-    upsertCallState(callSid, {
+    await upsertCallState(callSid, {
       intent: updatedIntent,
       slotFillAttempts: retryCount + 1,
     });
