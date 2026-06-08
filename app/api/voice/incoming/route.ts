@@ -33,15 +33,9 @@ export async function POST(req: NextRequest) {
     timeout: 10,
   });
   const choices = DEMO_ROSTER.map((r) => `press ${r.digit} for ${r.fullName}`).join(", ");
-  // Leading SSML <break> inside the Say. Polly synthesizes the break as
-  // real digital silence within the audio file, which Twilio streams as
-  // actual RTP frames — unlike <Pause>, which sends nothing. Those silent
-  // frames warm the browser's WebRTC audio path so by the time the speech
-  // portion plays, the pipeline is hot and nothing gets clipped. 4s gives
-  // generous margin over the ~2-3s wake-up we've measured.
   gather.say(
     { voice: "Polly.Joanna" },
-    `<break time="4s"/>Welcome to Cyprus Credit Union. To get started, please select a member account: ${choices}.`,
+    `Welcome to Cyprus Credit Union. To get started, please select a member account: ${choices}.`,
   );
 
   response.say(
