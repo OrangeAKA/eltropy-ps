@@ -25,26 +25,24 @@ export async function POST(req: NextRequest) {
   upsertCallState(callSid, {}, { fromPhone });
 
   const response = new twilio.twiml.VoiceResponse();
-  // Leading pause lets the browser SDK's audio path settle before the
-  // first <Say>. Without this, the start of the greeting gets spoken
-  // into a not-yet-ready stream and the caller misses the first chunk
-  // of the greeting. 2s covers callers with high WebRTC handshake
-  // latency (e.g., distant edges). Harmless for PSTN dial-in.
-  response.pause({ length: 2 });
-  response.say(
-    { voice: "Polly.Joanna" },
-    "Welcome. To get started, please select a sample member account.",
-  );
+  // Short pause lets the browser SDK WebRTC audio path settle.
+  // The greeting and choices live INSIDE the Gather so they form one
+  // continuous prompt — choices come at the end of the sentence, so
+  // even if the first 1-2 words are clipped on high-latency connections,
+  // the actionable digits still come through intact.
   response.pause({ length: 1 });
 
   const gather = response.gather({
     numDigits: 1,
     action: "/api/voice/member-select",
     method: "POST",
-    timeout: 8,
+    timeout: 10,
   });
-  const choices = DEMO_ROSTER.map((r) => `Press ${r.digit} for ${r.fullName}`).join(". ");
-  gather.say({ voice: "Polly.Joanna" }, `${choices}.`);
+  const choices = DEMO_ROSTER.map((r) => `press ${r.digit} for ${r.fullName}`).join(", ");
+  gather.say(
+    { voice: "Polly.Joanna" },
+    `Welcome to Cyprus Credit Union. To get started, please select a member account: ${choices}.`,
+  );
 
   response.say(
     { voice: "Polly.Joanna" },
