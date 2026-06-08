@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const digits = (form.get("Digits") as string) ?? "";
 
   const response = new twilio.twiml.VoiceResponse();
-  const state = getCallState(callSid);
+  const state = await getCallState(callSid);
 
   if (!state || !state.intent || !state.transcript || !state.selectedMemberPhone) {
     response.say(
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   if (digits === "2") {
     // Re-prompt for intent — clear the slot-fill counter so the member
     // gets a fresh window of follow-ups on the restated request.
-    upsertCallState(callSid, {
+    await upsertCallState(callSid, {
       transcript: undefined,
       intent: undefined,
       slotFillAttempts: 0,
@@ -118,20 +118,20 @@ export async function POST(req: NextRequest) {
   }
 
   // Confirmed AND (for transfers) preflight passed — push the trigger.
-  upsertCallState(callSid, { confirmed: true });
+  await upsertCallState(callSid, { confirmed: true });
 
   // Surface the confirmation to Mission Control before the trigger
   // post-call. Lets the cockpit show "request confirmed" while the
   // closing copy is still being spoken, so the demo viewer sees the
   // moment of confirmation in real time.
-  pushVoiceEvent({
+  await pushVoiceEvent({
     type: "request_confirmed",
     callSid,
     timestamp: Date.now(),
     intent: state.intent,
   });
 
-  pushPendingTrigger({
+  await pushPendingTrigger({
     callSid,
     fromPhone: state.fromPhone,
     selectedMemberPhone: state.selectedMemberPhone,
