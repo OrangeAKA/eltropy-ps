@@ -25,6 +25,12 @@ export async function POST(req: NextRequest) {
   upsertCallState(callSid, {}, { fromPhone });
 
   const response = new twilio.twiml.VoiceResponse();
+  // Leading pause lets the browser SDK's audio path settle before the
+  // first <Say>. Without this, the start of the greeting gets spoken
+  // into a not-yet-ready stream and the caller misses the first ~1s
+  // ("Welcome. To get started, please select a…"). Standard pattern
+  // for Voice SDK callers; harmless for PSTN dial-in.
+  response.pause({ length: 1 });
   response.say(
     { voice: "Polly.Joanna" },
     "Welcome. To get started, please select a sample member account.",
