@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       input: ["speech"],
       action: "/api/voice/intent",
       method: "POST",
-      speechTimeout: "auto",
+      speechTimeout: "2",
       language: "en-US",
       timeout: 10,
     });
@@ -155,12 +155,13 @@ function closingForIntent(intent: string, firstName: string): string {
   switch (intent) {
     case "transfer_funds":
       // Honest about uncertainty: the policy check hasn't run yet. The
-      // member will get a text once the result is known — success,
-      // queued for officer review, or held with a reason.
-      return `Got it, ${firstName}. I'm running the checks on that request right now. You'll get a text in just a moment confirming the result. Thanks for calling Cyprus Credit Union.`;
+      // outcome (success, queued for officer review, or held with a
+      // reason) lands in the member's Cyprus CU portal once it's known.
+      // Demo viewers see it materialize in Mission Control's audit log.
+      return `Got it, ${firstName}. I'm sending that request through the system now. Thanks for calling Cyprus Credit Union.`;
 
     case "balance_inquiry":
-      return `No problem, ${firstName}. I'll text you the balances in just a moment. Thanks for calling Cyprus Credit Union.`;
+      return `No problem, ${firstName}. I'm pulling up your balances now. Thanks for calling Cyprus Credit Union.`;
 
     case "card_dispute":
       return `Sorry to hear that, ${firstName}. I'm running the dispute through our review process now, and an officer will reach out shortly to walk through the next steps. Thanks for calling Cyprus Credit Union.`;

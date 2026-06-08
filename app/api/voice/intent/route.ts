@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       input: ["speech"],
       action: "/api/voice/intent",
       method: "POST",
-      speechTimeout: "auto",
+      speechTimeout: "2",
       language: "en-US",
       timeout: 10,
     });
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
       input: ["speech"],
       action: "/api/voice/intent",
       method: "POST",
-      speechTimeout: "auto",
+      speechTimeout: "2",
       language: "en-US",
       timeout: 10,
     });
