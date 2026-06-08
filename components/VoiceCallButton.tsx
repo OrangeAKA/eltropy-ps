@@ -33,7 +33,6 @@ export function VoiceCallButton({ disabled, onStatusChange }: Props) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const deviceRef = useRef<Device | null>(null);
   const callRef = useRef<Call | null>(null);
-  const warmupCtxRef = useRef<AudioContext | null>(null);
 
   // Surface status transitions to the parent so the page can react to
   // call lifecycle (used to fire the directorial nudge mid-call).
@@ -52,46 +51,12 @@ export function VoiceCallButton({ disabled, onStatusChange }: Props) {
       try {
         deviceRef.current?.destroy();
       } catch {}
-      try {
-        warmupCtxRef.current?.close();
-      } catch {}
       deviceRef.current = null;
       callRef.current = null;
-      warmupCtxRef.current = null;
     };
   }, []);
 
   const startCall = useCallback(async () => {
-    // Warm up the browser audio output BEFORE Twilio's audio arrives.
-    // The button click is a user gesture, which is what browsers require
-    // to create + resume an AudioContext. Playing a 3-second silent buffer
-    // through it wakes the OS-level audio output pipeline so it's hot by
-    // the time WebRTC frames begin flowing. Without this warmup, the
-    // first 2-3s of call audio is dropped while the pipeline spins up
-    // cold — TwiML <Pause> can't fix this because it sends no RTP frames
-    // (cold pipeline stays cold). Silent failure is fine: worst case the
-    // call still works, just with the original clipping.
-    try {
-      const AC =
-        window.AudioContext ??
-        (window as unknown as { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext;
-      if (AC) {
-        const ctx = new AC();
-        warmupCtxRef.current = ctx;
-        if (ctx.state === "suspended") {
-          void ctx.resume();
-        }
-        const buf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(ctx.destination);
-        src.start();
-      }
-    } catch (warmupErr) {
-      console.warn("[voice-call] audio warmup failed:", warmupErr);
-    }
-
     setErrorMsg(null);
     setStatus("fetching_token");
     try {
@@ -133,11 +98,7 @@ export function VoiceCallButton({ disabled, onStatusChange }: Props) {
         try {
           deviceRef.current?.destroy();
         } catch {}
-        try {
-          warmupCtxRef.current?.close();
-        } catch {}
         deviceRef.current = null;
-        warmupCtxRef.current = null;
       });
       call.on("error", (err: unknown) => {
         console.warn("[voice-call] call error:", err);
@@ -160,11 +121,7 @@ export function VoiceCallButton({ disabled, onStatusChange }: Props) {
     try {
       deviceRef.current?.destroy();
     } catch {}
-    try {
-      warmupCtxRef.current?.close();
-    } catch {}
     deviceRef.current = null;
-    warmupCtxRef.current = null;
     setStatus("ended");
   }, []);
 
