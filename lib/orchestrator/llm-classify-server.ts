@@ -12,6 +12,39 @@ import type { IntentClassification, IntentName, IntentEntities } from "@/lib/typ
 const MODEL = "claude-haiku-4-5-20251001";
 const CLASSIFIER_ID = "claude-haiku-4-5";
 
+// Fields the IVR treats as numeric. Claude usually returns these as
+// numbers, but occasionally serializes them as strings ("1000", "$1,500"),
+// which breaks downstream `typeof v === "number"` checks and causes the
+// slot-fill loop to run forever on a perfectly fine extraction. We
+// normalize at the boundary so the rest of the system can trust the type.
+const INTEGER_FIELDS = new Set([
+  "amount",
+  "existing_balance",
+  "vehicle_year",
+  "term_months",
+]);
+const FLOAT_FIELDS = new Set(["existing_apr"]);
+
+function coerceNumericFields(
+  entities: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(entities)) {
+    const isInt = INTEGER_FIELDS.has(k);
+    const isFloat = FLOAT_FIELDS.has(k);
+    if (typeof v === "string" && (isInt || isFloat)) {
+      const cleaned = v.replace(/[^0-9.]/g, "");
+      const parsed = parseFloat(cleaned);
+      if (!isNaN(parsed) && parsed > 0) {
+        out[k] = isInt ? Math.round(parsed) : parsed;
+        continue;
+      }
+    }
+    out[k] = v;
+  }
+  return out;
+}
+
 const SYSTEM_PROMPT = `You are an intent classifier for a US credit union's member-service AI orchestrator. Classify the inbound member message into ONE of these intents:
 
 - lending_inquiry: Member wants a NEW loan (auto, mortgage, HELOC, personal, etc.)
@@ -89,7 +122,7 @@ export async function classifyIntentServer(
       intent: normalizeIntent(parsed.intent),
       confidence:
         typeof parsed.confidence === "number" ? parsed.confidence : 0.85,
-      entities: (parsed.entities ?? {}) as IntentEntities,
+      entities: coerceNumericFields(parsed.entities ?? {}) as IntentEntities,
       classifier: CLASSIFIER_ID,
     };
   } catch (err) {
@@ -173,7 +206,7 @@ Extract any of the missing fields you can confidently identify in the utterance.
 
     try {
       const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-      return parsed;
+      return coerceNumericFields(parsed);
     } catch {
       return {};
     }
